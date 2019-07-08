@@ -1,0 +1,65 @@
+# Object files
+*.o
+*.lo
+*.ko
+*.obj
+*.elf
+*.mod.c
+.*.o.cmd
+.*.ko.cmd
+*.lib
+*.a
+*.la
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+src/mkzonefs
+
+# Kernel compile files
+*.symvers
+modules.order
+.tmp_versions
+
+# Dependency files
+.depfile
+.depend
+
+# Windows-specific files
+Thumbs.db
+desktop.ini
+
+# Mac-specific things (thanks to Michael Aaron Safyan)
+.DS_Store
+
+# Editors temporary files
+*~
+
+# Autotools stuff
+m4/*.m4
+*.in
+aclocal.m4
+autom4te.cache/
+build-aux/
+configure
+Makefile
+config.log
+config.status
+src/stamp-h1
+src/config.h
+.deps
+libtool
+.libs
+.dirstamp
+
