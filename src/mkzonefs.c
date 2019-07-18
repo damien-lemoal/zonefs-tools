@@ -214,18 +214,18 @@ int main(int argc, char **argv)
 	}
 
 	printf("Format:\n");
-	printf("    %u usable zones\n", dev.nr_zones - dev.nr_ol_zones - 1);
-	printf("    Aggregate conventional zones: %s\n",
+	printf("  %u usable zones\n", dev.nr_zones - dev.nr_ol_zones - 1);
+	printf("  Aggregate conventional zones: %s\n",
 	       dev.features & ZONEFS_F_AGRCNV ? "enabled" : "disabled");
-	printf("    Zone start sector file name: %s\n",
+	printf("  Zone start sector file name: %s\n",
 	       dev.features & ZONEFS_F_STARTSECT_NAME ? "enabled" : "disabled");
-	printf("    File UID: %u\n", dev.uid);
-	printf("    File GID: %u\n", dev.gid);
-	printf("    File access permissions: %o\n", dev.perm);
+	printf("  File UID: %u\n", dev.uid);
+	printf("  File GID: %u\n", dev.gid);
+	printf("  File access permissions: %o\n", dev.perm);
 
 	uuid_generate(dev.uuid);
 	uuid_unparse(dev.uuid, uuid_str);
-	printf("    Volume UUID: %s\n", uuid_str);
+	printf("  FS UUID: %s\n", uuid_str);
 
 	ret = 1;
 
