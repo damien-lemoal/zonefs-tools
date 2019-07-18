@@ -6,8 +6,6 @@
  * Authors: Damien Le Moal (damien.lemoal@wdc.com)
  */
 
-#include "zonefs.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -17,7 +15,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <asm/byteorder.h>
-#include <uuid/uuid.h>
+
+#include "zonefs.h"
 
 /*
  * Fill and write a super block.
@@ -35,9 +34,8 @@ static int zonefs_write_super(struct zonefs_dev *dev)
 	}
 
 	super->s_magic = __cpu_to_le32(ZONEFS_MAGIC);
-	super->s_version = __cpu_to_le32(ZONEFS_VERSION);
 	super->s_features = __cpu_to_le64(dev->features);
-	memcpy(super->s_uuid, dev->uuid, sizeof(dev->uuid));
+	uuid_copy(super->s_uuid, dev->uuid);
 	super->s_uid = __cpu_to_le32(dev->uid);
 	super->s_gid = __cpu_to_le32(dev->gid);
 	super->s_perm = __cpu_to_le32(dev->perm);
@@ -131,7 +129,7 @@ int main(int argc, char **argv)
 {
 	unsigned int nr_zones;
 	struct zonefs_dev dev;
-	char uuid_str[100];
+	char uuid_str[UUID_STR_LEN];
 	int i, ret;
 
 	/* Initialize */
@@ -216,7 +214,6 @@ int main(int argc, char **argv)
 	}
 
 	printf("Format:\n");
-	printf("    Meta version: %d\n", ZONEFS_VERSION);
 	printf("    %u usable zones\n", dev.nr_zones - dev.nr_ol_zones - 1);
 	printf("    Aggregate conventional zones: %s\n",
 	       dev.features & ZONEFS_F_AGRCNV ? "enabled" : "disabled");

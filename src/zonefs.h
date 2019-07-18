@@ -17,12 +17,8 @@
 #include <sys/types.h>
 #include <linux/blkzoned.h>
 #include <linux/magic.h>
+#include <uuid/uuid.h>
 #include <stdbool.h>
-
-/*
- * Metadata version.
- */
-#define ZONEFS_VERSION	1
 
 /*
  * On-disk super block magic.
@@ -39,7 +35,6 @@
 #define ZONEFS_F_UID			(1ULL << 2)
 #define ZONEFS_F_GID			(1ULL << 3)
 #define ZONEFS_F_PERM			(1ULL << 4)
-/* #define ZONEFS_F_USE_OPENZONE	(1ULL << 5) */
 
 /*
  * On disk super block.
@@ -50,24 +45,21 @@ struct zonefs_super {
 	/* Magic number */
 	__le32		s_magic;		/*    4 */
 
-	/* Metadata version number */
-	__le32		s_version;		/*    8 */
-
 	/* Features */
-	__le64		s_features;		/*   16 */
+	__le64		s_features;		/*   12 */
 
 	/* 128-bit uuid */
-	__u8		s_uuid[16];		/*   32 */
+	uuid_t		s_uuid;			/*   28 */
 
 	/* UID/GID to use for files */
-	__le32		s_uid;			/*   36 */
-	__le32		s_gid;			/*   40 */
+	__le32		s_uid;			/*   32 */
+	__le32		s_gid;			/*   36 */
 
 	/* File permissions */
-	__le32		s_perm;			/*   44 */
+	__le32		s_perm;			/*   40 */
 
 	/* Padding to 4K */
-	__u8		s_reserved[4052];	/* 4096 */
+	__u8		s_reserved[4056];	/* 4096 */
 
 } __attribute__ ((packed));
 
@@ -86,7 +78,7 @@ struct zonefs_dev {
 	unsigned int		uid;
 	unsigned int		gid;
 	unsigned int		perm;
-	unsigned char		uuid[16];
+	uuid_t			uuid;
 
 	/* Device info */
 	unsigned int		model;
