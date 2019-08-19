@@ -1,0 +1,124 @@
+#!/bin/bash
+#
+# SPDX-License-Identifier: GPL-2.0
+#
+# Copyright (C) 2019 Western Digital Corporation or its affiliates.
+#
+
+function exit_failed()
+{
+	echo "$1"
+	exit 1
+}
+
+function zonefs_mkfs()
+{
+	IFS=' ';
+	read -r -a args <<< "$1"
+
+	mkzonefs -f "${args[@]}" || \
+		exit_failed " --> mkzonefs FAILED"
+}
+
+function zonefs_mount()
+{
+	IFS=' ';
+	read -r -a args <<< "$1"
+
+	mount -t zonefs "${args[@]}" "$zonefs_mntdir" || \
+		exit_failed " --> mount FAILED"
+}
+
+function zonefs_mount_err()
+{
+	IFS=' ';
+	read -r -a args <<< "$1"
+
+	mount -t zonefs "${args[@]}" "$zonefs_mntdir" && \
+		exit_failed " --> mount SUCCESS (should FAIL)"
+}
+
+function zonefs_umount()
+{
+	umount "$zonefs_mntdir" || \
+		exit_failed " --> umount FAILED"
+}
+
+function check_perm()
+{
+	for f in "$zonefs_mntdir"/cnv/[0-9]*; do
+		perm=$(stat -c "%a" "$f")
+		if [ "$perm" != "$1" ]; then
+			echo "$f: invalid permission $perm (expected $1)"
+			exit 1
+		fi
+	done
+
+	for f in "$zonefs_mntdir"/seq/[0-9]*; do
+		perm=$(stat -c "%a" "$f")
+		if [ "$perm" != "$1" ]; then
+			echo "$f: invalid permission $perm (expected $1)"
+			exit 1
+		fi
+	done
+}
+
+function check_uid_gid()
+{
+	for f in "$zonefs_mntdir"/cnv/[0-9]*; do
+		uid=$(stat -c "%u" "$f")
+		gid=$(stat -c "%g" "$f")
+		if [ "$uid" != "$1" ]; then
+			echo "$f: invalid UID $uid (expected $1)"
+			exit 1
+		fi
+		if [ "$gid" != "$2" ]; then
+			echo "$f: invalid GID $gid (expected $2)"
+			exit 1
+		fi
+	done
+
+	for f in "$zonefs_mntdir"/seq/[0-9]*; do
+		uid=$(stat -c "%u" "$f")
+		gid=$(stat -c "%g" "$f")
+		if [ "$uid" != "$1" ]; then
+			echo "$f: invalid UID $uid (expected $1)"
+			exit 1
+		fi
+		if [ "$gid" != "$2" ]; then
+			echo "$f: invalid GID $gid (expected $2)"
+			exit 1
+		fi
+	done
+}
+
+function file_size()
+{
+	stat -c "%s" "$1"
+}
+
+function check_size()
+{
+	aggr_cnv=$1
+
+	for f in "$zonefs_mntdir"/cnv/[0-9]*; do
+		sz=$(file_size "$f")
+		if $aggr_cnv; then
+			expected_sz=$(( zone_bytes * (nr_cnv_zones - 1) ))
+		else
+			expected_sz=$zone_bytes
+		fi
+		if [ "$sz" != "$expected_sz" ]; then
+			echo "$f: invalid size $sz B (expected $expected_sz B)"
+			exit 1
+		fi
+	done
+
+	for f in "$zonefs_mntdir"/seq/[0-9]*; do
+		sz=$(file_size "$f")
+		if [ "$sz" != "0" ]; then
+			echo "$f: invalid size $sz B (expected 0 B)"
+			exit 1
+		fi
+	done
+}
