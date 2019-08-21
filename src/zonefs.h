@@ -40,26 +40,30 @@
  * On disk super block.
  * This uses a full 4KB block.
  */
+#define ZONEFS_SUPER_SIZE	4096U
 struct zonefs_super {
 
 	/* Magic number */
 	__le32		s_magic;		/*    4 */
 
+	/* Checksum */
+	__le32		s_crc;			/*    8 */
+
 	/* Features */
-	__le64		s_features;		/*   12 */
+	__le64		s_features;		/*   16 */
 
 	/* 128-bit uuid */
-	uuid_t		s_uuid;			/*   28 */
+	uuid_t		s_uuid;			/*   32 */
 
 	/* UID/GID to use for files */
-	__le32		s_uid;			/*   32 */
-	__le32		s_gid;			/*   36 */
+	__le32		s_uid;			/*   36 */
+	__le32		s_gid;			/*   40 */
 
 	/* File permissions */
-	__le32		s_perm;			/*   40 */
+	__le32		s_perm;			/*   44 */
 
-	/* Padding to 4K */
-	__u8		s_reserved[4056];	/* 4096 */
+	/* Padding to ZONEFS_SUPER_SIZE bytes */
+	__u8		s_reserved[4052];	/* 4096 */
 
 } __attribute__ ((packed));
 
@@ -115,5 +119,11 @@ extern void zonefs_close_dev(struct zonefs_dev *dev);
 extern int zonefs_sync_dev(struct zonefs_dev *dev);
 extern int zonefs_reset_zone(struct zonefs_dev *dev, struct blk_zone *zone);
 extern int zonefs_reset_zones(struct zonefs_dev *dev);
+
+/*
+ * For compile time checks
+ */
+#define ZONEFS_STATIC_ASSERT(cond) \
+	extern void zonefs_static_assert(int dummy[(cond) ? 1 : -1])
 
 #endif /* __ZONEFS_H__ */

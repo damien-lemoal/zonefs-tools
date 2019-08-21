@@ -19,26 +19,50 @@
 #include "zonefs.h"
 
 /*
+ * For super block checksum (CRC32)
+ */
+#define CRCPOLY_LE 0xedb88320
+
+__u32 zonefs_crc32(__u32 crc, const void *buf, size_t length)
+{
+        unsigned char *p = (unsigned char *)buf;
+        int i;
+
+        while (length--) {
+                crc ^= *p++;
+                for (i = 0; i < 8; i++)
+                        crc = (crc >> 1) ^ ((crc & 1) ? CRCPOLY_LE : 0);
+        }
+
+        return crc;
+}
+
+/*
  * Fill and write a super block.
  */
 static int zonefs_write_super(struct zonefs_dev *dev)
 {
 	struct zonefs_super *super;
+	__u32 crc;
 	int ret;
 
 	ret = posix_memalign((void **)&super, sysconf(_SC_PAGESIZE),
-			     sizeof(struct zonefs_super));
+			     sizeof(*super));
 	if (ret) {
 		fprintf(stderr, "Not enough memory\n");
 		return -1;
 	}
 
+	memset(super, 0, sizeof(*super));
 	super->s_magic = __cpu_to_le32(ZONEFS_MAGIC);
 	super->s_features = __cpu_to_le64(dev->features);
 	uuid_copy(super->s_uuid, dev->uuid);
 	super->s_uid = __cpu_to_le32(dev->uid);
 	super->s_gid = __cpu_to_le32(dev->gid);
 	super->s_perm = __cpu_to_le32(dev->perm);
+
+	crc = zonefs_crc32(ZONEFS_MAGIC, super, sizeof(*super));
+	super->s_crc = __cpu_to_le32(crc);
 
 	ret = pwrite(dev->fd, super, sizeof(*super), 0);
 	free(super);
@@ -131,6 +155,9 @@ int main(int argc, char **argv)
 	struct zonefs_dev dev;
 	char uuid_str[UUID_STR_LEN];
 	int i, ret;
+
+	/* Compile time checks */
+	ZONEFS_STATIC_ASSERT(sizeof(struct zonefs_super) == ZONEFS_SUPER_SIZE);
 
 	/* Initialize */
 	memset(&dev, 0, sizeof(dev));
