@@ -115,7 +115,7 @@ static int zonefs_parse_features(struct zonefs_dev *dev, char *features)
 			f += 5;
 			dev->perm = strtol(f, &ef, 8);
 			if (errno == ERANGE) {
-				fprintf(stderr, "Invalid UID\n");
+				fprintf(stderr, "Invalid file permissions\n");
 				return -1;
 			}
 			f = ef;
