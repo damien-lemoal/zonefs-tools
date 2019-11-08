@@ -12,24 +12,35 @@ if [ $# == 0 ]; then
         exit 0
 fi
 
-echo "Check for number of files: $(( nr_cnv_zones - 1)) cnv, $nr_seq_zones seq"
+if [ "$nr_cnv_zones" == 0 ]; then
+	num_cnv_files=0
+	num_seq_files=$(( nr_seq_zones - 1 ))
+elif [ "$nr_cnv_zones" == 1 ]; then
+	num_cnv_files=0
+	num_seq_files=$nr_seq_zones
+else
+	num_cnv_files=$(( nr_cnv_zones - 1 ))
+	num_seq_files=$nr_seq_zones
+fi
+
+echo "Check for number of files: $num_cnv_files cnv, $num_seq_files seq"
 
 zonefs_mkfs "$1"
 zonefs_mount "$1"
 
-if [ "$nr_cnv_zones" != 0 ]; then
+if [ "$num_cnv_files" != 0 ]; then
 	nr_files=$(ls "$zonefs_mntdir/cnv/" | wc -l)
-	if [ "$nr_files" != "$(( nr_cnv_zones - 1))" ]; then
+	if [ "$nr_files" != "$num_cnv_files" ]; then
 		echo " --> Invalid number of conventional zones file:"
-		echo " --> Expected $(( nr_cnv_zones - 1)), got $nr_files"
+		echo " --> Expected $num_cnv_files, got $nr_files"
 		exit 1
 	fi
 fi
 
 nr_files=$(ls "$zonefs_mntdir/seq/" | wc -l)
-if [ "$nr_files" != "$nr_seq_zones" ]; then
+if [ "$nr_files" != "$num_seq_files" ]; then
 	echo " --> Invalid number of sequential zones file:"
-	echo " --> Expected $nr_seq_zones, got $nr_files"
+	echo " --> Expected $nr_seq_files, got $nr_files"
 	exit 1
 fi
 
