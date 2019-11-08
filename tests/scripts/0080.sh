@@ -17,12 +17,30 @@ echo "Check sequential file truncate"
 zonefs_mkfs "$1"
 zonefs_mount "$1"
 
+dd if=/dev/zero of="$zonefs_mntdir"/seq/0 oflag=direct bs=4096 count=1 || \
+	exit_failed " --> FAILED"
+
+sz=$(file_size "$zonefs_mntdir"/seq/0)
+[ "$sz" != "4096" ] && \
+	exit_failed " --> Invalid file size $sz B, expected 4096 B"
+
+echo "## file truncate to 0 (zone reset)"
+
 truncate --no-create --size=0 "$zonefs_mntdir"/seq/0 || \
 	exit_failed " --> FAILED"
 
 sz=$(file_size "$zonefs_mntdir"/seq/0)
 [ "$sz" != "0" ] && \
-	exit_failed " --> invalid file size $sz B, expected 0 B"
+	exit_failed " --> Invalid file size $sz B, expected 0 B"
+
+echo "## file truncate to after zone wp (e.g. 4096B)"
+
+truncate --no-create --size=4096 "$zonefs_mntdir"/seq/0 && \
+	exit_failed " --> SUCCESS (should FAIL)"
+
+sz=$(file_size "$zonefs_mntdir"/seq/0)
+[ "$sz" != "0" ] && \
+	exit_failed " --> Invalid file size $sz B, expected 0 B"
 
 zonefs_umount
 

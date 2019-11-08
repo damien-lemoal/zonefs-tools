@@ -36,7 +36,7 @@ truncate --no-create --size=0 "$zonefs_mntdir"/seq/0 || \
 
 sz=$(file_size "$zonefs_mntdir"/seq/0)
 [ "$sz" != "0" ] && \
-	exit_failed " --> invalid file size $sz B, expected 0 B"
+	exit_failed " --> Invalid file size $sz B, expected 0 B"
 
 zonefs_umount
 
