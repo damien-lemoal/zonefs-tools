@@ -94,7 +94,12 @@ passed=0
 total=0
 rc=0
 
-dev=$1
+dev="$1"
+if [ -z "$dev" ]; then
+	usage
+	exit 1
+fi
+
 realdev=$(readlink -f "$dev")
 bdev=$(basename "$realdev")
 major=$((0x$(stat -L -c '%t' "$realdev")))
