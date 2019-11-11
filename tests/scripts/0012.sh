@@ -5,6 +5,8 @@
 # Copyright (C) 2019 Western Digital Corporation or its affiliates.
 #
 
+. scripts/test_lib
+
 if [ $# == 0 ]; then
 	echo "mkzonefs (invalid device)"
 	exit 0
