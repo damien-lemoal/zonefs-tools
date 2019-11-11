@@ -46,13 +46,15 @@ function zonefs_umount()
 
 function check_perm()
 {
-	for f in "$zonefs_mntdir"/cnv/[0-9]*; do
-		perm=$(stat -c "%a" "$f")
-		if [ "$perm" != "$1" ]; then
-			echo "$f: invalid permission $perm (expected $1)"
-			exit 1
-		fi
-	done
+	if [ -d "$zonefs_mntdir/cnv/" ]; then
+		for f in "$zonefs_mntdir"/cnv/[0-9]*; do
+			perm=$(stat -c "%a" "$f")
+			if [ "$perm" != "$1" ]; then
+				echo "$f: invalid permission $perm (expected $1)"
+				exit 1
+			fi
+		done
+	fi
 
 	for f in "$zonefs_mntdir"/seq/[0-9]*; do
 		perm=$(stat -c "%a" "$f")
@@ -65,18 +67,20 @@ function check_perm()
 
 function check_uid_gid()
 {
-	for f in "$zonefs_mntdir"/cnv/[0-9]*; do
-		uid=$(stat -c "%u" "$f")
-		gid=$(stat -c "%g" "$f")
-		if [ "$uid" != "$1" ]; then
-			echo "$f: invalid UID $uid (expected $1)"
-			exit 1
-		fi
-		if [ "$gid" != "$2" ]; then
-			echo "$f: invalid GID $gid (expected $2)"
-			exit 1
-		fi
-	done
+	if [ -d "$zonefs_mntdir/cnv/" ]; then
+		for f in "$zonefs_mntdir"/cnv/[0-9]*; do
+			uid=$(stat -c "%u" "$f")
+			gid=$(stat -c "%g" "$f")
+			if [ "$uid" != "$1" ]; then
+				echo "$f: invalid UID $uid (expected $1)"
+				exit 1
+			fi
+			if [ "$gid" != "$2" ]; then
+				echo "$f: invalid GID $gid (expected $2)"
+				exit 1
+			fi
+		done
+	fi
 
 	for f in "$zonefs_mntdir"/seq/[0-9]*; do
 		uid=$(stat -c "%u" "$f")
@@ -101,18 +105,20 @@ function check_size()
 {
 	aggr_cnv=$1
 
-	for f in "$zonefs_mntdir"/cnv/[0-9]*; do
-		sz=$(file_size "$f")
-		if $aggr_cnv; then
-			expected_sz=$(( zone_bytes * (nr_cnv_zones - 1) ))
-		else
-			expected_sz=$zone_bytes
-		fi
-		if [ "$sz" != "$expected_sz" ]; then
-			echo "$f: invalid size $sz B (expected $expected_sz B)"
-			exit 1
-		fi
-	done
+	if [ -d "$zonefs_mntdir/cnv/" ]; then
+		for f in "$zonefs_mntdir"/cnv/[0-9]*; do
+			sz=$(file_size "$f")
+			if $aggr_cnv; then
+				expected_sz=$(( zone_bytes * (nr_cnv_zones - 1) ))
+			else
+				expected_sz=$zone_bytes
+			fi
+			if [ "$sz" != "$expected_sz" ]; then
+				echo "$f: invalid size $sz B (expected $expected_sz B)"
+				exit 1
+			fi
+		done
+	fi
 
 	for f in "$zonefs_mntdir"/seq/[0-9]*; do
 		sz=$(file_size "$f")
