@@ -16,8 +16,8 @@ fi
 mkzonefs /dev/console && exit_failed " --> SUCCESS (should FAIL)"
 
 # Regular disk
-modprobe null_blk
-mkzonefs /dev/nullb0 && exit_failed " --> SUCCESS (should FAIL)"
-rmmod null_blk
+nulldev=$(create_nullb)
+mkzonefs "/dev/nullb$nulldev" && exit_failed " --> SUCCESS (should FAIL)"
+destroy_nullb $nulldev
 
 exit 0

@@ -18,8 +18,8 @@ zonefs_mount_err /dev/console
 
 # Regular device
 echo "Check mount with non-zoned block device"
-modprobe null_blk
-zonefs_mount_err /dev/nullb0
-rmmod null_blk
+nulldev=$(create_nullb)
+zonefs_mount_err "/dev/nullb$nulldev"
+destroy_nullb $nulldev
 
 exit 0

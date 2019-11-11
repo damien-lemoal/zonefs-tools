@@ -128,3 +128,32 @@ function check_size()
 		fi
 	done
 }
+
+function create_nullb()
+{
+	local n=0
+
+	modprobe null_blk
+
+	while [ 1 ]; do
+		if [ ! -b "/dev/nullb$n" ]; then
+			break
+		fi
+		n=$(( n + 1 ))
+	done
+
+	mkdir /sys/kernel/config/nullb/nullb$n
+	echo 1 > /sys/kernel/config/nullb/nullb$n/power
+
+	echo "$n"
+}
+
+function destroy_nullb()
+{
+        local n=$1
+
+	echo 0 > /sys/kernel/config/nullb/nullb$n/power
+	rmdir /sys/kernel/config/nullb/nullb$n
+
+	rmmod null_blk >> /dev/null 2>&1
+}
