@@ -15,7 +15,7 @@ fi
 zonefs_mkfs "$1"
 zonefs_mount "$1"
 
-if [ "$nr_cnv_zones" <= 1 ]; then
+if [ "$nr_cnv_zones" -le 1 ]; then
 	if [ -d "$zonefs_mntdir/cnv/" ]; then
 		echo "$zonefs_mntdir/cnv/ exits (should not exist)"
 		exit 1
