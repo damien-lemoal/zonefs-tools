@@ -4,6 +4,7 @@
 #
 # Copyright (C) 2019 Western Digital Corporation or its affiliates.
 #
+. scripts/test_lib
 
 function usage() {
     echo "Usage: $(basename "$0") [Options] <Zoned device node file>"
@@ -127,13 +128,26 @@ fi
 
 echo "zonefs-tests on $dev:"
 
+zonefs_mntdir="mnt"
+
+# Drive parameters
 nr_zones=$(get_nr_zones "$bdev")
-nr_cnv_zones=$(get_nr_cnv_zones "$bdev")
-nr_seq_zones=$(get_nr_seq_zones "$bdev")
 zone_sectors=$(get_zone_sectors "$bdev")
 zone_bytes=$(get_zone_bytes "$bdev")
+nr_cnv_zones=$(get_nr_cnv_zones "$bdev")
+nr_seq_zones=$(get_nr_seq_zones "$bdev")
 
-zonefs_mntdir="mnt"
+# Expected number of files
+if [ "$nr_cnv_zones" == 0 ]; then
+	nr_cnv_files=0
+	nr_seq_files=$(( nr_seq_zones - 1 ))
+elif [ "$nr_cnv_zones" == 1 ]; then
+	nr_cnv_files=0
+	nr_seq_files=$nr_seq_zones
+else
+	nr_cnv_files=$(( nr_cnv_zones - 1 ))
+	nr_seq_files=$nr_seq_zones
+fi
 
 echo "  $nr_zones zones ($nr_cnv_zones conventional zones, $nr_seq_zones sequential zones)"
 echo "  $zone_sectors 512B sectors per zone ($(( zone_bytes / 1048576 )) MiB)"
@@ -148,11 +162,15 @@ run_test() {
 
 	echo "## Test $1 ($( $1 ))"
 	echo ""
-	if "$1" "$2" >> ${logfile} 2>&1; then
+
+	"$1" "$2" >> ${logfile} 2>&1
+	ret=$?
+	if [ "$ret" == 0 ]; then
 		echo "PASS"
+	elif [ "$ret" == 2 ]; then
+		echo "N/A"
 	else
 		echo "FAILED"
-		ret=1
 	fi
 	echo ""
 
@@ -162,12 +180,16 @@ run_test() {
 	return $ret
 }
 
+export zonefs_mntdir
+
 export nr_zones
-export nr_cnv_zones
-export nr_seq_zones
 export zone_sectors
 export zone_bytes
-export zonefs_mntdir
+export nr_cnv_zones
+export nr_seq_zones
+
+export nr_cnv_files
+export nr_seq_files
 
 echo "Running tests"
 rm -f "${logfile}"
@@ -177,16 +199,26 @@ for t in "${tests[@]}"; do
 	echo -n "  Test $(test_num "$t"):  "
 	printf "%-64s ... " "$( $t )"
 
-	if run_test "$t" "$1" >> ${logfile} 2>&1; then
+	run_test "$t" "$1" >> ${logfile} 2>&1
+	ret=$?
+	if [ "$ret" == 0 ]; then
 		status="PASS"
-		((passed++))
+		rc=0
+	elif [ "$ret" == 2 ]; then
+		status="N/A"
+		rc=0
 	else
 		status="FAIL"
 		rc=1
 	fi
 
+	if [ "$rc" == 0 ]; then
+		((passed++))
+	fi
 	((total++))
 	echo "$status"
+
+	na=0
 done
 
 echo ""

@@ -12,7 +12,11 @@ if [ $# == 0 ]; then
         exit 0
 fi
 
-echo "Check for defualt UID 0 and GID 0, aggr_cnv"
+if [ "$nr_cnv_files" == 0 ]; then
+	exit_na
+fi
+
+echo "Check for default UID 0 and GID 0, aggr_cnv"
 
 zonefs_mkfs "-o aggr_cnv $1"
 zonefs_mount "$1"

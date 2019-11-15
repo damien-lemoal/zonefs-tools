@@ -12,8 +12,8 @@ if [ $# == 0 ]; then
         exit 0
 fi
 
-if [ "$nr_cnv_zones" == "0" ]; then
-	exit 0
+if [ "$nr_cnv_files" == 0 ]; then
+	exit_na
 fi
 
 echo "Check conventional file random write"

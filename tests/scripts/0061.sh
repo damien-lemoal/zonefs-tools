@@ -12,6 +12,10 @@ if [ $# == 0 ]; then
         exit 0
 fi
 
+if [ "$nr_cnv_files" == 0 ]; then
+	exit_na
+fi
+
 echo "Check for $(( zone_bytes * (nr_cnv_zones - 1) )) B file size"
 
 zonefs_mkfs "-o aggr_cnv $1"

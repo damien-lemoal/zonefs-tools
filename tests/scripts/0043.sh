@@ -12,7 +12,12 @@ if [ $# == 0 ]; then
         exit 0
 fi
 
+if [ "$nr_cnv_files" == 0 ]; then
+	exit_na
+fi
+
 echo "Check for files permission 770 (aggr_cnv)"
+
 zonefs_mkfs "-o aggr_cnv,perm=770 $1"
 zonefs_mount "$1"
 check_perm "770"
