@@ -63,3 +63,6 @@ libtool
 .libs
 .dirstamp
 
+# Tests files
+tests/*.state
+tests/*.log
