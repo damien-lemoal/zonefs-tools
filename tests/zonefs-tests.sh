@@ -5,7 +5,7 @@
 # Copyright (C) 2019 Western Digital Corporation or its affiliates.
 #
 
-usage() {
+function usage() {
     echo "Usage: $(basename "$0") [Options] <Zoned device node file>"
     echo "Options:"
     echo "  -l || --list: List all tests"
@@ -15,29 +15,35 @@ usage() {
 
 blkzone=$(type -p blkzone 2>/dev/null)
 
-get_nr_zones() {
+function get_nr_zones() {
 	${blkzone} report "/dev/$1" | wc -l || return 0
 }
 
-get_nr_cnv_zones() {
+function get_nr_cnv_zones() {
 	${blkzone} report "/dev/$1" | grep -c "CONVENTIONAL" || return 0
 }
 
-get_nr_seq_zones() {
+function get_nr_seq_zones() {
 	${blkzone} report "/dev/$1" | grep -c "SEQ_WRITE_" || return 0
 }
 
-get_zone_sectors() {
+function get_zone_sectors() {
 	cat "/sys/class/block/$1/queue/chunk_sectors"
 }
 
-get_zone_bytes() {
+function get_zone_bytes() {
 	echo $(( $(get_zone_sectors "$1") * 512 ))
 }
 
-test_num() {
+function test_num() {
 	basename "$1" | cut -d "." -f1
 }
+
+# Check credentials
+if [ $(id -u) -ne 0 ]; then
+	echo "Root credentials are needed to run tests."
+	exit 1
+fi
 
 declare -a tests
 declare list=false
