@@ -1,23 +1,23 @@
-.\"  Copyright (C) 2016, Western Digital.
+.\"  Copyright (C) 2019, Western Digital Corporation or its affiliates.
 .\"  Written by Damien Le Moal <damien.lemoal@wdc.com>
 .\"
-.TH MKZONEFS 8
+.TH mkzonefs 8
 .SH NAME
 mkzonefs \- Create a zonefs file system on a zoned block device
 
 .SH SYNOPSIS
 .B mkzonefs
 [
-.B -h|--help
+.B \-h|\-\-help
 ]
 [
-.B -v
+.B \-v
 ]
 [
-.B -f
+.B \-f
 ]
 [
-.B -o
+.B \-o
 .I features
 ]
 .I device
@@ -42,38 +42,30 @@ Overwrite existing file system format on the device
 
 .TP
 .BI \-o " features"
-Specify optional features. Features are comma separated and
-may take an argument using the eqauls ("=") sign. The following
-extended features are supported.
-.RS 1.2i
+.RS
+Specify optional features. Features are comma separated and may take an
+argument using the equal ("=") sign. The following extended features are
+supported.
 .TP
-.B aggr_cnv
+.BR aggr_cnv
 Aggregate contiguous conventional zones into a single file.
 Default: off (create one file per zone).
 .TP
-.B sect_name
+.BR sect_name
 Use base-10 zone start sector value as file names instead of a file number.
 .TP
-.BI uid= UID
-Create files with
-.I UID
-as owner user. The default is "root" user (UID 0).
+.BR uid =\fIUID\fR
+Create files with \fIUID\fR as owner user. The default is "root" user (UID 0).
 .TP
-.BI gid= GID
-Create files with
-.I GID
-as group owner. The default is "root" group (GID 0).
+.BR gid =\fIGID\fR
+Create files with \fIGID\fR as group owner. The default is "root" group (GID 0).
 .TP
-.BI perm= permissions
-Create files with
-.I permissions
-as access rights. The default is "640".
+.BR perm =\fIpermissions\fR
+Create files with \fIpermissions\fR as access rights. The default is "640".
 .RE
 
 .SH AUTHOR
-This version of
-.B mkzonefs
-was written by Damien Le Moal <damien.lemoal@wdc.com>.
+This version of \fBmkzonefs\fR was written by Damien Le Moal.
 
 .SH AVAILABILITY
 .B mkzonefs
