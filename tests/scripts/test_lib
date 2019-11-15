@@ -47,53 +47,77 @@ function zonefs_umount()
 function check_perm()
 {
 	if [ -d "$zonefs_mntdir/cnv/" ]; then
-		for f in "$zonefs_mntdir"/cnv/[0-9]*; do
-			perm=$(stat -c "%a" "$f")
+		list=$(stat -c "%n %a" "$zonefs_mntdir"/cnv/[0-9]*)
+		while read -r line; do
+
+			fp=(${line})
+			f=$(basename "${fp[0]}")
+			perm=${fp[1]}
+
 			if [ "$perm" != "$1" ]; then
-				echo "$f: invalid permission $perm (expected $1)"
+				echo "cnv file $f: invalid permission $perm (expected $1)"
 				exit 1
 			fi
-		done
+
+		done <<< "$list"
 	fi
 
-	for f in "$zonefs_mntdir"/seq/[0-9]*; do
-		perm=$(stat -c "%a" "$f")
+	list=$(stat -c "%n %a" "$zonefs_mntdir"/seq/[0-9]*)
+	while read -r line; do
+
+		fp=(${line})
+		f=$(basename "${fp[0]}")
+		perm=${fp[1]}
+
 		if [ "$perm" != "$1" ]; then
-			echo "$f: invalid permission $perm (expected $1)"
+			echo "seq file $f: invalid permission $perm (expected $1)"
 			exit 1
 		fi
-	done
+
+	done <<< "$list"
 }
 
 function check_uid_gid()
 {
 	if [ -d "$zonefs_mntdir/cnv/" ]; then
-		for f in "$zonefs_mntdir"/cnv/[0-9]*; do
-			uid=$(stat -c "%u" "$f")
-			gid=$(stat -c "%g" "$f")
+		list=$(stat -c "%n %u %g" "$zonefs_mntdir"/cnv/[0-9]*)
+		while read -r line; do
+
+			fug=(${line})
+			f=$(basename "${fug[0]}")
+			uid=${fug[1]}
+			gid=${fug[2]}
+
 			if [ "$uid" != "$1" ]; then
-				echo "$f: invalid UID $uid (expected $1)"
+				echo "cnv file $f: invalid UID $uid (expected $1)"
 				exit 1
 			fi
 			if [ "$gid" != "$2" ]; then
-				echo "$f: invalid GID $gid (expected $2)"
+				echo "cnv file $f: invalid GID $gid (expected $2)"
 				exit 1
 			fi
-		done
+
+		done <<< "$list"
 	fi
 
-	for f in "$zonefs_mntdir"/seq/[0-9]*; do
-		uid=$(stat -c "%u" "$f")
-		gid=$(stat -c "%g" "$f")
+	list=$(stat -c "%n %u %g" "$zonefs_mntdir"/seq/[0-9]*)
+	while read -r line; do
+
+		fug=(${line})
+		f=$(basename "${fug[0]}")
+		uid=${fug[1]}
+		gid=${fug[2]}
+
 		if [ "$uid" != "$1" ]; then
-			echo "$f: invalid UID $uid (expected $1)"
+			echo "seq file $f: invalid UID $uid (expected $1)"
 			exit 1
 		fi
 		if [ "$gid" != "$2" ]; then
-			echo "$f: invalid GID $gid (expected $2)"
+			echo "seq file $f: invalid GID $gid (expected $2)"
 			exit 1
 		fi
-	done
+
+	done <<< "$list"
 }
 
 function file_size()
@@ -106,27 +130,40 @@ function check_size()
 	aggr_cnv=$1
 
 	if [ -d "$zonefs_mntdir/cnv/" ]; then
-		for f in "$zonefs_mntdir"/cnv/[0-9]*; do
-			sz=$(file_size "$f")
-			if $aggr_cnv; then
-				expected_sz=$(( zone_bytes * (nr_cnv_zones - 1) ))
-			else
-				expected_sz=$zone_bytes
-			fi
+		if $aggr_cnv; then
+			expected_sz=$(( zone_bytes * (nr_cnv_zones - 1) ))
+		else
+			expected_sz=$zone_bytes
+		fi
+
+		list=$(stat -c "%n %s" "$zonefs_mntdir"/cnv/[0-9]*)
+		while read -r line; do
+
+			fsz=(${line})
+			f=$(basename "${fsz[0]}")
+			sz=${fsz[1]}
+
 			if [ "$sz" != "$expected_sz" ]; then
-				echo "$f: invalid size $sz B (expected $expected_sz B)"
+				echo "cnv file $f: invalid size $sz B (expected $expected_sz B)"
 				exit 1
 			fi
-		done
+
+		done <<< "$list"
 	fi
 
-	for f in "$zonefs_mntdir"/seq/[0-9]*; do
-		sz=$(file_size "$f")
+	list=$(stat -c "%n %s" "$zonefs_mntdir"/seq/[0-9]*)
+	while read -r line; do
+
+		fsz=(${line})
+		f=$(basename "${fsz[0]}")
+		sz=${fsz[1]}
+
 		if [ "$sz" != "0" ]; then
-			echo "$f: invalid size $sz B (expected 0 B)"
+			echo "seq file $f: invalid size $sz B (expected 0 B)"
 			exit 1
 		fi
-	done
+
+	done <<< "$list"
 }
 
 function create_nullb()
