@@ -7,52 +7,59 @@
 
 scriptdir="$(cd "$(dirname "$0")" && pwd)"
 
-for d in /sys/kernel/config/nullb/*; do [ -d "$d" ] && rmdir "$d"; done
-modprobe -r null_blk
-modprobe null_blk nr_devices=0 || return $?
-for d in /sys/kernel/config/nullb/*; do
-	[ -d "$d" ] && rmdir "$d"
-done
-modprobe -r null_blk
-[ -e /sys/module/null_blk ] && exit $?
-
 modprobe null_blk nr_devices=0
 
-# Create null_blk regular disk
-cd /sys/kernel/config/nullb
-mkdir nullb0 && cd nullb0
+# Create a zoned null_blk disk
+function create_zoned_nullb()
+{
+	local n=0
 
-echo 4096 > blocksize
-echo 1 > power
+	while [ 1 ]; do
+		if [ ! -b "/dev/nullb$n" ]; then
+			break
+		fi
+		n=$(( n + 1 ))
+	done
 
-# Create null_blk zoned disk
-cd /sys/kernel/config/nullb
-mkdir nullb1 && cd nullb1
+	dev="/sys/kernel/config/nullb/nullb$n"
+	mkdir "$dev"
 
-echo 4096 > blocksize
-echo 0 > completion_nsec
-echo 0 > irqmode
-echo 2 > queue_mode
-echo 4096 > size
-echo 1024 > hw_queue_depth
-echo 1 > zoned
-echo 64 > zone_size
-echo 16 > zone_nr_conv
-echo 1 > memory_backed
+	echo 4096 > "$dev"/blocksize
+	echo 0 > "$dev"/completion_nsec
+	echo 0 > "$dev"/irqmode
+	echo 2 > "$dev"/queue_mode
 
-echo 1 > power
+	echo 4096 > "$dev"/size
+	echo 1024 > "$dev"/hw_queue_depth
+	echo 1 > "$dev"/memory_backed
 
-echo mq-deadline > /sys/block/nullb1/queue/scheduler
+	echo 1 > "$dev"/zoned
+	echo 64 > "$dev"/zone_size
+	echo $1 > "$dev"/zone_nr_conv
 
-# Run tests
-cd "$scriptdir"
-./zonefs-tests.sh /dev/nullb1
+	echo 1 > "$dev"/power
 
-# Remove null_blk
-for d in /sys/kernel/config/nullb/nullb*; do
-	echo 0 > "$d"/power
-       	rmdir "$d"
+	echo "$n"
+}
+
+function destroy_zoned_nullb()
+{
+        local n=$1
+
+	echo 0 > /sys/kernel/config/nullb/nullb$n/power
+	rmdir /sys/kernel/config/nullb/nullb$n
+}
+
+for c in 16 1 0; do
+
+	echo ""
+	echo "Run tests against device with $c conventional zones..."
+	echo ""
+	nulld=$(create_zoned_nullb $c)
+	./zonefs-tests.sh "/dev/nullb$nulld"
+	destroy_zoned_nullb "$nulld"
+
 done
 
-modprobe -r null_blk
+rmmod null_blk >> /dev/null 2>&1
 
