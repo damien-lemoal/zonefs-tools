@@ -202,7 +202,7 @@ function create_nullb()
 {
 	local n=0
 
-	modprobe null_blk
+	modprobe null_blk nr_devices=0
 
 	while [ 1 ]; do
 		if [ ! -b "/dev/nullb$n" ]; then
