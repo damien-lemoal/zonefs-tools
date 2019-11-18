@@ -6,38 +6,18 @@
 #
 . scripts/test_lib
 
-function usage() {
-    echo "Usage: $(basename "$0") [Options] <Zoned device node file>"
-    echo "Options:"
-    echo "  -l || --list: List all tests"
-    echo "  -t <test num>: Test to execute. Can be specified multiple times."
-    echo "  -h || --help: This help message"
-}
-
-blkzone=$(type -p blkzone 2>/dev/null)
-
-function get_nr_zones() {
-	${blkzone} report "/dev/$1" | wc -l || return 0
-}
-
-function get_nr_cnv_zones() {
-	${blkzone} report "/dev/$1" | grep -c "CONVENTIONAL" || return 0
-}
-
-function get_nr_seq_zones() {
-	${blkzone} report "/dev/$1" | grep -c "SEQ_WRITE_" || return 0
-}
-
-function get_zone_sectors() {
-	cat "/sys/class/block/$1/queue/chunk_sectors"
-}
-
-function get_zone_bytes() {
-	echo $(( $(get_zone_sectors "$1") * 512 ))
-}
-
-function test_num() {
+function test_num()
+{
 	basename "$1" | cut -d "." -f1
+}
+
+function usage()
+{
+	echo "Usage: $(basename "$0") [Options] <Zoned device node file>"
+	echo "Options:"
+	echo "  -l || --list: List all tests"
+	echo "  -t <test num>: Test to execute. Can be specified multiple times."
+	echo "  -h || --help: This help message"
 }
 
 # Check credentials
@@ -97,6 +77,7 @@ if $list; then
 fi
 
 logfile=zonefs-tests.log
+rm -f "${logfile}"
 passed=0
 total=0
 rc=0
@@ -104,6 +85,11 @@ rc=0
 dev="$1"
 if [ -z "$dev" ]; then
 	usage
+	exit 1
+fi
+
+if [ ! -b "$dev" ]; then
+	echo "Invalid block device"
 	exit 1
 fi
 
@@ -126,16 +112,15 @@ if [ "$(<"/sys/class/block/$bdev/queue/zoned")" == "none" ]; then
         exit 1
 fi
 
-echo "zonefs-tests on $dev:"
-
-zonefs_mntdir="mnt"
+export zonefs_mntdir="mnt"
+mkdir -p "$zonefs_mntdir"
 
 # Drive parameters
-nr_zones=$(get_nr_zones "$bdev")
-zone_sectors=$(get_zone_sectors "$bdev")
-zone_bytes=$(get_zone_bytes "$bdev")
-nr_cnv_zones=$(get_nr_cnv_zones "$bdev")
-nr_seq_zones=$(get_nr_seq_zones "$bdev")
+export nr_zones=$(get_nr_zones "$bdev")
+export zone_sectors=$(get_zone_sectors "$bdev")
+export zone_bytes=$(get_zone_bytes "$bdev")
+export nr_cnv_zones=$(get_nr_cnv_zones "$bdev")
+export nr_seq_zones=$(get_nr_seq_zones "$bdev")
 
 # Expected number of files
 if [ "$nr_cnv_zones" == 0 ]; then
@@ -148,9 +133,8 @@ else
 	nr_cnv_files=$(( nr_cnv_zones - 1 ))
 	nr_seq_files=$nr_seq_zones
 fi
-
-echo "  $nr_zones zones ($nr_cnv_zones conventional zones, $nr_seq_zones sequential zones)"
-echo "  $zone_sectors 512B sectors per zone ($(( zone_bytes / 1048576 )) MiB)"
+export nr_cnv_files
+export nr_seq_files
 
 # Set IO scheduler
 echo deadline >"/sys/block/$bdev/queue/scheduler"
@@ -180,20 +164,10 @@ run_test() {
 	return $ret
 }
 
-export zonefs_mntdir
-
-export nr_zones
-export zone_sectors
-export zone_bytes
-export nr_cnv_zones
-export nr_seq_zones
-
-export nr_cnv_files
-export nr_seq_files
-
+echo "zonefs-tests on $dev:"
+echo "  $nr_zones zones ($nr_cnv_zones conventional zones, $nr_seq_zones sequential zones)"
+echo "  $zone_sectors 512B sectors per zone ($(( zone_bytes / 1048576 )) MiB)"
 echo "Running tests"
-rm -f "${logfile}"
-mkdir -p "$zonefs_mntdir"
 
 for t in "${tests[@]}"; do
 	echo -n "  Test $(test_num "$t"):  "
