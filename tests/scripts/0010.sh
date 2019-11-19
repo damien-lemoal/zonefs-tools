@@ -6,7 +6,7 @@
 #
 
 if [ $# == 0 ]; then
-	echo "mkzonefs"
+	echo "mkzonefs (options)"
 	exit 0
 fi
 
