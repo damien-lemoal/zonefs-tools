@@ -5,6 +5,12 @@
 # Copyright (C) 2019 Western Digital Corporation or its affiliates.
 #
 
+# Check credentials
+if [ $(id -u) -ne 0 ]; then
+        echo "Root credentials are needed to run tests."
+        exit 1
+fi
+
 scriptdir="$(cd "$(dirname "$0")" && pwd)"
 
 modprobe null_blk nr_devices=0
