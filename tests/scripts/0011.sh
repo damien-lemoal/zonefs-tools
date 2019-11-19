@@ -6,7 +6,7 @@
 #
 
 if [ $# == 0 ]; then
-	echo "mkzonefs (-f)"
+	echo "mkzonefs (force format)"
 	exit 0
 fi
 
