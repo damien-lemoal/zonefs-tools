@@ -178,8 +178,7 @@ static int zonefs_get_dev_capacity(struct zonefs_dev *dev)
 /*
  * Convert zone type to a string.
  */
-static inline const char *
-zonefs_zone_type_str(struct blk_zone *zone)
+static inline const char *zonefs_zone_type_str(struct blk_zone *zone)
 {
 	switch (zone->type) {
 	case BLK_ZONE_TYPE_CONVENTIONAL:
@@ -195,8 +194,7 @@ zonefs_zone_type_str(struct blk_zone *zone)
 /*
  * Convert zone condition to a string.
  */
-static inline const char *
-zonefs_zone_cond_str(struct blk_zone *zone)
+static inline const char *zonefs_zone_cond_str(struct blk_zone *zone)
 {
 	switch (zone->cond) {
 	case BLK_ZONE_COND_NOT_WP:
@@ -553,10 +551,43 @@ int zonefs_sync_dev(struct zonefs_dev *dev)
 }
 
 /*
+ * Finish a zone (requires Linux kernel v5.5 and above).
+ */
+#ifdef BLKFINISHZONE
+
+int zonefs_finish_zone(struct zonefs_dev *dev, struct blk_zone *zone)
+{
+	struct blk_zone_range range;
+
+	if (zone->type == BLK_ZONE_TYPE_CONVENTIONAL)
+		return 0;
+
+	/* Sequential zone: transition it to full state */
+	range.sector = zone->start;
+	range.nr_sectors = zone->len;
+	if (ioctl(dev->fd, BLKFINISHZONE, &range) < 0) {
+		fprintf(stderr,
+			"%s: Finish zone %u failed %d (%s)\n",
+			dev->name, zonefs_zone_id(dev, zone),
+			errno, strerror(errno));
+		return -1;
+	}
+
+	return 0;
+}
+#else
+
+int zonefs_finish_zone(struct zonefs_dev *dev, struct blk_zone *zone)
+{
+	return 0;
+}
+
+#endif /* BLKFINISHZONE */
+
+/*
  * Reset a zone.
  */
-int zonefs_reset_zone(struct zonefs_dev *dev,
-		      struct blk_zone *zone)
+int zonefs_reset_zone(struct zonefs_dev *dev, struct blk_zone *zone)
 {
 	struct blk_zone_range range;
 
@@ -570,8 +601,7 @@ int zonefs_reset_zone(struct zonefs_dev *dev,
 	if (ioctl(dev->fd, BLKRESETZONE, &range) < 0) {
 		fprintf(stderr,
 			"%s: Reset zone %u failed %d (%s)\n",
-			dev->name,
-			zonefs_zone_id(dev, zone),
+			dev->name, zonefs_zone_id(dev, zone),
 			errno, strerror(errno));
 		return -1;
 	}

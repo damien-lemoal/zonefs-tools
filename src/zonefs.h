@@ -114,16 +114,17 @@ struct zonefs_dev {
 
 #define zonefs_zone_id(dev, z)	(unsigned int)((z)->start / (dev)->zone_nr_sectors)
 
-extern int zonefs_open_dev(struct zonefs_dev *dev, bool check_overwrite);
-extern void zonefs_close_dev(struct zonefs_dev *dev);
-extern int zonefs_sync_dev(struct zonefs_dev *dev);
-extern int zonefs_reset_zone(struct zonefs_dev *dev, struct blk_zone *zone);
-extern int zonefs_reset_zones(struct zonefs_dev *dev);
+int zonefs_open_dev(struct zonefs_dev *dev, bool check_overwrite);
+void zonefs_close_dev(struct zonefs_dev *dev);
+int zonefs_sync_dev(struct zonefs_dev *dev);
+int zonefs_finish_zone(struct zonefs_dev *dev, struct blk_zone *zone);
+int zonefs_reset_zone(struct zonefs_dev *dev, struct blk_zone *zone);
+int zonefs_reset_zones(struct zonefs_dev *dev);
 
 /*
  * For compile time checks
  */
 #define ZONEFS_STATIC_ASSERT(cond) \
-	extern void zonefs_static_assert(int dummy[(cond) ? 1 : -1])
+	void zonefs_static_assert(int dummy[(cond) ? 1 : -1])
 
 #endif /* __ZONEFS_H__ */

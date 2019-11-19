@@ -74,7 +74,7 @@ static int zonefs_write_super(struct zonefs_dev *dev)
 		return -1;
 	}
 
-	return 0;
+	return zonefs_finish_zone(dev, &dev->zones[0]);
 }
 
 /*
