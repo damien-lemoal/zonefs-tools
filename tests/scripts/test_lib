@@ -9,22 +9,22 @@ blkzone=$(type -p blkzone 2>/dev/null)
 
 function get_nr_zones()
 {
-	${blkzone} report "/dev/$1" | wc -l || exit 0
+	${blkzone} report "$1" | wc -l || exit 0
 }
 
 function get_nr_cnv_zones()
 {
-	${blkzone} report "/dev/$1" | grep -c "CONVENTIONAL" || exit 0
+	${blkzone} report "$1" | grep -c "CONVENTIONAL" || exit 0
 }
 
 function get_nr_seq_zones()
 {
-	${blkzone} report "/dev/$1" | grep -c "SEQ_WRITE_" || exit 0
+	${blkzone} report "$1" | grep -c "SEQ_WRITE_" || exit 0
 }
 
 function get_zone_sectors()
 {
-	cat "/sys/class/block/$1/queue/chunk_sectors"
+	cat "/sys/class/block/$(basename $1)/queue/chunk_sectors"
 }
 
 function get_zone_bytes()

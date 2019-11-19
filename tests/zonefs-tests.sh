@@ -116,11 +116,11 @@ export zonefs_mntdir="mnt"
 mkdir -p "$zonefs_mntdir"
 
 # Drive parameters
-export nr_zones=$(get_nr_zones "$bdev")
-export zone_sectors=$(get_zone_sectors "$bdev")
-export zone_bytes=$(get_zone_bytes "$bdev")
-export nr_cnv_zones=$(get_nr_cnv_zones "$bdev")
-export nr_seq_zones=$(get_nr_seq_zones "$bdev")
+export nr_zones=$(get_nr_zones "$dev")
+export zone_sectors=$(get_zone_sectors "$dev")
+export zone_bytes=$(get_zone_bytes "$dev")
+export nr_cnv_zones=$(get_nr_cnv_zones "$dev")
+export nr_seq_zones=$(get_nr_seq_zones "$dev")
 
 # Expected number of files
 if [ "$nr_cnv_zones" == 0 ]; then
