@@ -9,17 +9,17 @@ blkzone=$(type -p blkzone 2>/dev/null)
 
 function get_nr_zones()
 {
-	${blkzone} report "/dev/$1" | wc -l || return 0
+	${blkzone} report "/dev/$1" | wc -l || exit 0
 }
 
 function get_nr_cnv_zones()
 {
-	${blkzone} report "/dev/$1" | grep -c "CONVENTIONAL" || return 0
+	${blkzone} report "/dev/$1" | grep -c "CONVENTIONAL" || exit 0
 }
 
 function get_nr_seq_zones()
 {
-	${blkzone} report "/dev/$1" | grep -c "SEQ_WRITE_" || return 0
+	${blkzone} report "/dev/$1" | grep -c "SEQ_WRITE_" || exit 0
 }
 
 function get_zone_sectors()
@@ -30,6 +30,23 @@ function get_zone_sectors()
 function get_zone_bytes()
 {
 	echo $(( $(get_zone_sectors "$1") * 512 ))
+}
+
+function zone_info()
+{
+	${blkzone} report --count 1 --offset "$2" "$1" || exit 0
+}
+
+function zone_is_conventional()
+{
+	z="$(zone_info $1 $2)"
+	echo "$z" | grep -q "CONVENTIONAL" && return 0 || return 1
+}
+
+function zone_is_full()
+{
+	z="$(zone_info $1 $2)"
+	echo "$z" | grep -q "zcond:14(fu)" && return 0 || return 1
 }
 
 function exit_na()
