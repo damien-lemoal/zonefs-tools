@@ -8,11 +8,11 @@
 . scripts/test_lib
 
 if [ $# == 0 ]; then
-	echo "Sequential file unaligned write (sync)"
+	echo "Sequential file unaligned write (async IO)"
         exit 0
 fi
 
-echo "Check sequential file unaligned write (sync)"
+echo "Check sequential file unaligned write (async IO)"
 
 zonefs_mkfs "$1"
 zonefs_mount "$1"
