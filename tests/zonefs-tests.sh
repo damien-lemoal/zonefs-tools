@@ -171,18 +171,18 @@ echo "Running tests"
 
 for t in "${tests[@]}"; do
 	echo -n "  Test $(test_num "$t"):  "
-	printf "%-64s ... " "$( $t )"
+	printf "%-52s ... " "$( $t )"
 
 	run_test "$t" "$1" >> ${logfile} 2>&1
 	ret=$?
 	if [ "$ret" == 0 ]; then
-		status="PASS"
+		status="\e[92mPASS\e[0m"
 		rc=0
 	elif [ "$ret" == 2 ]; then
 		status="skip"
 		rc=0
 	else
-		status="FAIL"
+		status="\e[31mFAIL\e[0m"
 		rc=1
 	fi
 
@@ -190,7 +190,7 @@ for t in "${tests[@]}"; do
 		((passed++))
 	fi
 	((total++))
-	echo "$status"
+	echo -e "$status"
 
 	na=0
 done
