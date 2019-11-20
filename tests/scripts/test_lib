@@ -250,3 +250,18 @@ function destroy_nullb()
 
 	rmmod null_blk >> /dev/null 2>&1
 }
+
+function file_number()
+{
+        stat -f -c "%c" "$1"
+}
+
+function block_number()
+{
+        stat -f -c "%b" "$1"
+}
+
+function block_size()
+{
+        stat -f -c "%S" "$1"
+}
