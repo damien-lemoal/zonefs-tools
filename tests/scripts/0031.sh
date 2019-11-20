@@ -13,7 +13,7 @@ if [ $# == 0 ]; then
 fi
 
 if [ "$nr_cnv_files" == 0 ]; then
-	exit_na
+	exit_skip
 fi
 
 echo "Check for number of files: 1 cnv, $nr_seq_files seq"

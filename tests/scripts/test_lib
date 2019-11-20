@@ -49,7 +49,7 @@ function zone_is_full()
 	echo "$z" | grep -q "zcond:14(fu)" && return 0 || return 1
 }
 
-function exit_na()
+function exit_skip()
 {
 	exit 2
 }

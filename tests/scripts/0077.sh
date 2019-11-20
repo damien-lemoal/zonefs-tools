@@ -13,7 +13,7 @@ if [ $# == 0 ]; then
 fi
 
 if [ "$nr_cnv_files" == 0 ]; then
-	exit_na
+	exit_skip
 fi
 
 echo "Check conventional file random write, aggr_cnv, direct"

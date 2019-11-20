@@ -152,7 +152,7 @@ run_test() {
 	if [ "$ret" == 0 ]; then
 		echo "PASS"
 	elif [ "$ret" == 2 ]; then
-		echo "N/A"
+		echo "skip"
 	else
 		echo "FAILED"
 	fi
@@ -179,7 +179,7 @@ for t in "${tests[@]}"; do
 		status="PASS"
 		rc=0
 	elif [ "$ret" == 2 ]; then
-		status="N/A"
+		status="skip"
 		rc=0
 	else
 		status="FAIL"
