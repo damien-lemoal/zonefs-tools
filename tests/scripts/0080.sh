@@ -42,6 +42,16 @@ sz=$(file_size "$zonefs_mntdir"/seq/0)
 [ "$sz" != "0" ] && \
 	exit_failed " --> Invalid file size $sz B, expected 0 B"
 
+echo "## file truncate to zone size (zone finish)"
+
+maxsize=$(file_max_size "$zonefs_mntdir"/seq/0)
+truncate --no-create --size=$maxsize "$zonefs_mntdir"/seq/0 || \
+	exit_failed " --> FAILED"
+
+sz=$(file_size "$zonefs_mntdir"/seq/0)
+[ "$sz" != "$maxsize" ] && \
+	exit_failed " --> Invalid file size $sz B, expected $maxsize B"
+
 zonefs_umount
 
 exit 0
