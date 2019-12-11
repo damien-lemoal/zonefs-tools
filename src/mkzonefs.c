@@ -89,9 +89,6 @@ static int zonefs_parse_features(struct zonefs_dev *dev, char *features)
 		if (strncmp(f, "aggr_cnv", 8) == 0) {
 			dev->features |= ZONEFS_F_AGGRCNV;
 			f += 8;
-		} else if (strncmp(f, "sect_name", 9) == 0) {
-			dev->features |= ZONEFS_F_STARTSECT_NAME;
-			f += 9;
 		} else if (strncmp(f, "uid=", 4) == 0) {
 			dev->features |= ZONEFS_F_UID;
 			f += 4;
@@ -244,8 +241,6 @@ int main(int argc, char **argv)
 	printf("  %u usable zones\n", dev.nr_zones - dev.nr_ol_zones - 1);
 	printf("  Aggregate conventional zones: %s\n",
 	       dev.features & ZONEFS_F_AGGRCNV ? "enabled" : "disabled");
-	printf("  Zone start sector file name: %s\n",
-	       dev.features & ZONEFS_F_STARTSECT_NAME ? "enabled" : "disabled");
 	printf("  File UID: %u\n", dev.uid);
 	printf("  File GID: %u\n", dev.gid);
 	printf("  File access permissions: %o\n", dev.perm);

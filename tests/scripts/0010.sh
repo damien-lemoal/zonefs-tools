@@ -25,11 +25,10 @@ OPTS_OK=(""
 	 "-v"
 	 "-f"
 	 "-o aggr_cnv"
-	 "-o sect_name"
 	 "-o uid=0"
 	 "-o gid=0"
 	 "-o perm=777"
-	 "-o aggr_cnv,sect_name,uid=0,gid=0,perm=777")
+	 "-o aggr_cnv,uid=0,gid=0,perm=777")
 
 for ((i = 0; i < ${#OPTS_OK[@]}; i++)); do
 	clear_sb "$1"

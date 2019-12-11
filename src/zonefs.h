@@ -30,11 +30,10 @@
 /*
  * Feature flags.
  */
-#define ZONEFS_F_STARTSECT_NAME		(1ULL << 0)
-#define ZONEFS_F_AGGRCNV       		(1ULL << 1)
-#define ZONEFS_F_UID			(1ULL << 2)
-#define ZONEFS_F_GID			(1ULL << 3)
-#define ZONEFS_F_PERM			(1ULL << 4)
+#define ZONEFS_F_AGGRCNV       		(1ULL << 0)
+#define ZONEFS_F_UID			(1ULL << 1)
+#define ZONEFS_F_GID			(1ULL << 2)
+#define ZONEFS_F_PERM			(1ULL << 3)
 
 /*
  * On disk super block.
