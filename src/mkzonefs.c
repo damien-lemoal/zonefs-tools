@@ -61,7 +61,7 @@ static int zonefs_write_super(struct zonefs_dev *dev)
 	super->s_gid = __cpu_to_le32(dev->gid);
 	super->s_perm = __cpu_to_le32(dev->perm);
 
-	crc = zonefs_crc32(ZONEFS_MAGIC, super, sizeof(*super));
+	crc = zonefs_crc32(~0U, super, sizeof(*super));
 	super->s_crc = __cpu_to_le32(crc);
 
 	ret = pwrite(dev->fd, super, sizeof(*super), 0);
