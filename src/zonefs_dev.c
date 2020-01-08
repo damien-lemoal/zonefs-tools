@@ -539,13 +539,28 @@ void zonefs_close_dev(struct zonefs_dev *dev)
  */
 int zonefs_sync_dev(struct zonefs_dev *dev)
 {
-	if (fsync(dev->fd) < 0) {
+	blkid_cache cache;
+	int ret;
+
+	ret = fsync(dev->fd);
+	if (ret < 0) {
 		fprintf(stderr,
 			"%s: fsync failed %d (%s)\n",
 			dev->name,
 			errno, strerror(errno));
 		return -1;
 	}
+
+	/*
+	 * Make sure udev notices the uuid and label changes so that blkid
+	 * cache and by-uuid/by-label device links all get updated.
+	 */
+	ret = blkid_get_cache(&cache, NULL);
+	if (ret >= 0) {
+		blkid_get_dev(cache, dev->path, BLKID_DEV_NORMAL);
+		blkid_put_cache(cache);
+	}
+	blkid_send_uevent(dev->path, "change");
 
 	return 0;
 }

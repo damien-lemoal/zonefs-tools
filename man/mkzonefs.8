@@ -17,6 +17,10 @@ mkzonefs \- Create a zonefs file system on a zoned block device
 .B \-f
 ]
 [
+.B \-L
+.I label
+]
+[
 .B \-o
 .I features
 ]
@@ -28,24 +32,26 @@ is used to create a zonefs file system on a zoned block device.
 
 .SH OPTIONS
 .TP
-.BI \-h
-.BI \-\-help
+\fB\-h\fR, \fB\-\-help\fR
 Display a short usage message and return
 
 .TP
-.B \-v
+.BI \-v
 Verbose output
 
 .TP
-.B \-f
+.BI \-f
 Overwrite existing file system format on the device
+
+.TP
+.BI \-L " label"
+Specify a label (volume name). A label must not exceed 32 characters.
 
 .TP
 .BI \-o " features"
 .RS
 Specify optional features. Features are comma separated and may take an
-argument using the equal ("=") sign. The following extended features are
-supported.
+argument using the equal ("=") sign. The following features are supported.
 .TP
 .BR aggr_cnv
 Aggregate contiguous conventional zones into a single file.

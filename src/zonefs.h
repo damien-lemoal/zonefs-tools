@@ -24,16 +24,22 @@
  * On-disk super block magic.
  */
 #ifndef ZONEFS_MAGIC
-#define ZONEFS_MAGIC	0x5a4f4653 /* 'Z' 'O' 'F' 'S' */
+#define ZONEFS_MAGIC		0x5a4f4653 /* 'Z' 'O' 'F' 'S' */
 #endif
 
 /*
  * Feature flags.
  */
-#define ZONEFS_F_AGGRCNV       		(1ULL << 0)
-#define ZONEFS_F_UID			(1ULL << 1)
-#define ZONEFS_F_GID			(1ULL << 2)
-#define ZONEFS_F_PERM			(1ULL << 3)
+#define ZONEFS_F_AGGRCNV	(1ULL << 0)
+#define ZONEFS_F_UID		(1ULL << 1)
+#define ZONEFS_F_GID		(1ULL << 2)
+#define ZONEFS_F_PERM		(1ULL << 3)
+
+/*
+ * Volume label and UUID size.
+ */
+#define ZONEFS_LABEL_LEN	64
+#define ZONEFS_UUID_SIZE	16
 
 /*
  * On disk super block.
@@ -43,26 +49,29 @@
 struct zonefs_super {
 
 	/* Magic number */
-	__le32		s_magic;		/*    4 */
+	__le32		s_magic;			/*    4 */
 
 	/* Checksum */
-	__le32		s_crc;			/*    8 */
+	__le32		s_crc;				/*    8 */
 
-	/* Features */
-	__le64		s_features;		/*   16 */
+	/* Volume label */
+	char		s_label[ZONEFS_LABEL_LEN];	/*   72 */
 
 	/* 128-bit uuid */
-	uuid_t		s_uuid;			/*   32 */
+	__u8		s_uuid[ZONEFS_UUID_SIZE];	/*   88 */
+
+	/* Features */
+	__le64		s_features;			/*   96 */
 
 	/* UID/GID to use for files */
-	__le32		s_uid;			/*   36 */
-	__le32		s_gid;			/*   40 */
+	__le32		s_uid;				/*  100 */
+	__le32		s_gid;				/*  104 */
 
 	/* File permissions */
-	__le32		s_perm;			/*   44 */
+	__le32		s_perm;				/*  108 */
 
 	/* Padding to ZONEFS_SUPER_SIZE bytes */
-	__u8		s_reserved[4052];	/* 4096 */
+	__u8		s_reserved[3988];		/* 4096 */
 
 } __attribute__ ((packed));
 
@@ -81,6 +90,7 @@ struct zonefs_dev {
 	unsigned int		uid;
 	unsigned int		gid;
 	unsigned int		perm;
+	char			label[ZONEFS_LABEL_LEN];
 	uuid_t			uuid;
 
 	/* Device info */
@@ -111,7 +121,8 @@ struct zonefs_dev {
 #define ZONEFS_VERBOSE  	(1 << 0)
 #define ZONEFS_OVERWRITE	(1 << 1)
 
-#define zonefs_zone_id(dev, z)	(unsigned int)((z)->start / (dev)->zone_nr_sectors)
+#define zonefs_zone_id(dev, z) \
+	(unsigned int)((z)->start / (dev)->zone_nr_sectors)
 
 int zonefs_open_dev(struct zonefs_dev *dev, bool check_overwrite);
 void zonefs_close_dev(struct zonefs_dev *dev);

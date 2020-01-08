@@ -55,8 +55,9 @@ static int zonefs_write_super(struct zonefs_dev *dev)
 
 	memset(super, 0, sizeof(*super));
 	super->s_magic = __cpu_to_le32(ZONEFS_MAGIC);
-	super->s_features = __cpu_to_le64(dev->features);
 	uuid_copy(super->s_uuid, dev->uuid);
+	strcpy(super->s_label, dev->label);
+	super->s_features = __cpu_to_le64(dev->features);
 	super->s_uid = __cpu_to_le32(dev->uid);
 	super->s_gid = __cpu_to_le32(dev->gid);
 	super->s_perm = __cpu_to_le32(dev->perm);
@@ -155,6 +156,7 @@ int main(int argc, char **argv)
 
 	/* Compile time checks */
 	ZONEFS_STATIC_ASSERT(sizeof(struct zonefs_super) == ZONEFS_SUPER_SIZE);
+	ZONEFS_STATIC_ASSERT(sizeof(uuid_t) == ZONEFS_UUID_SIZE);
 
 	/* Initialize */
 	memset(&dev, 0, sizeof(dev));
@@ -176,6 +178,19 @@ int main(int argc, char **argv)
 			dev.flags |= ZONEFS_OVERWRITE;
 		} else if (strcmp(argv[i], "-v") == 0) {
 			dev.flags |= ZONEFS_VERBOSE;
+		} else if (strcmp(argv[i], "-L") == 0) {
+			i++;
+			if (i >= argc - 1) {
+				fprintf(stderr, "Invalid command line\n");
+				return 1;
+			}
+			if (strlen(argv[i]) > ZONEFS_LABEL_LEN) {
+				fprintf(stderr,
+					"Label too long (%d chars allowed)\n",
+					ZONEFS_LABEL_LEN);
+				return 1;
+			}
+			memcpy(dev.label, argv[i], strlen(argv[i]));
 		} else if (strcmp(argv[i], "-o") == 0) {
 			i++;
 			if (i >= argc - 1) {
@@ -244,6 +259,9 @@ int main(int argc, char **argv)
 	printf("  File UID: %u\n", dev.uid);
 	printf("  File GID: %u\n", dev.gid);
 	printf("  File access permissions: %o\n", dev.perm);
+
+	if (strlen(dev.label))
+		printf("  FS label: %s\n", dev.label);
 
 	uuid_generate(dev.uuid);
 	uuid_unparse(dev.uuid, uuid_str);
