@@ -1,4 +1,4 @@
-AC_INIT([zonefs tools], [1.2.0], [damien.lemoal@wdc.com])
+AC_INIT([zonefs tools], [1.3.0], [damien.lemoal@wdc.com])
 
 AC_PREFIX_DEFAULT(/usr)
 AC_CONFIG_HEADER([src/config.h])
