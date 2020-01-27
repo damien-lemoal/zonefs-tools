@@ -76,12 +76,6 @@ if $list; then
 	exit 0
 fi
 
-logfile=zonefs-tests.log
-rm -f "${logfile}"
-passed=0
-total=0
-rc=0
-
 dev="$1"
 if [ -z "$dev" ]; then
 	usage
@@ -112,8 +106,14 @@ if [ "$(<"/sys/class/block/$bdev/queue/zoned")" == "none" ]; then
         exit 1
 fi
 
-export zonefs_mntdir="mnt"
+export zonefs_mntdir="$bdev-mnt"
 mkdir -p "$zonefs_mntdir"
+
+logfile="$bdev-zonefs-tests.log"
+rm -f "${logfile}"
+passed=0
+total=0
+rc=0
 
 # Drive parameters
 export nr_zones=$(get_nr_zones "$dev")
