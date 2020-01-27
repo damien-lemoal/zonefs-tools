@@ -66,7 +66,7 @@ function zonefs_mkfs()
 	read -r -a args <<< "$1"
 
 	mkzonefs -f "${args[@]}" || \
-		exit_failed " --> mkzonefs FAILED"
+		exit_failed " --> mkzonefs FAILED with arguments \"${args[*]}\""
 }
 
 function zonefs_mount()
@@ -75,7 +75,7 @@ function zonefs_mount()
 	read -r -a args <<< "$1"
 
 	mount -t zonefs "${args[@]}" "$zonefs_mntdir" || \
-		exit_failed " --> mount FAILED"
+		exit_failed " --> mount FAILED with arguments \"${args[*]} $zonefs_mntdir\""
 }
 
 function zonefs_mount_err()
@@ -84,7 +84,7 @@ function zonefs_mount_err()
 	read -r -a args <<< "$1"
 
 	mount -t zonefs "${args[@]}" "$zonefs_mntdir" && \
-		exit_failed " --> mount SUCCESS (should FAIL)"
+		exit_failed " --> mount SUCCESS with arguments \"${args[*]} $zonefs_mntdir\" (should FAIL)"
 }
 
 function zonefs_umount()
