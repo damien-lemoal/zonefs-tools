@@ -15,16 +15,19 @@ fi
 zonefs_mkfs "$1"
 
 # Test good mount options
-OPTS=("-o errors=remount-ro"
-      "-o errors=continue"
-      "-o errors=panic")
+OPTS=("-o errors=repair"
+      "-o errors=remount-ro"
+      "-o errors=zone-ro"
+      "-o errors=zone-offline")
 for ((i = 0; i < ${#OPTS[@]}; i++)); do
 	zonefs_mount "${OPTS[$i]} $1"
 	zonefs_umount "$1"
 done
 
 # Test invalid mount options
-OPTS=("-o errors=unknown"
+OPTS=("-o errors=continue"
+      "-o errors=panic"
+      "-o foo=bar"
       "-o bad_option")
 for ((i = 0; i < ${#OPTS[@]}; i++)); do
 	zonefs_mount_err "${OPTS[$i]} $1"
