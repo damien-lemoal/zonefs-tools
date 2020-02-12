@@ -57,13 +57,18 @@ function destroy_zoned_nullb()
 }
 
 declare -i rc=0
+
+# Do 3 runs for 3 different drives: 16 conventional zones,
+# 1 conventional zone and no conventional zones.
 for c in 16 1 0; do
 
 	echo ""
 	echo "Run tests against device with $c conventional zones..."
 	echo ""
 	nulld=$(create_zoned_nullb $c)
-	if ! ./zonefs-tests.sh "/dev/nullb$nulld"; then
+
+	logfile="nullb${nulld}-cnv${c}-zonefs-tests.log"
+	if ./zonefs-tests.sh "-g" "$logfile" "/dev/nullb$nulld"; then
 		rc=1
 	fi
 

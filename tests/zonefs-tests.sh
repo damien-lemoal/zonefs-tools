@@ -15,7 +15,9 @@ function usage()
 {
 	echo "Usage: $(basename "$0") [Options] <Zoned device node file>"
 	echo "Options:"
-	echo "  -l || --list: List all tests"
+	echo "  -l: List all tests"
+	echo "  -g <file name>: Use file name for the test log file."
+	echo "                  default: <dev name>-zonefs-tests.log"
 	echo "  -t <test num>: Test to execute. Can be specified multiple times."
 	echo "  -h || --help: This help message"
 }
@@ -28,6 +30,7 @@ fi
 
 declare -a tests
 declare list=false
+logfile=""
 
 while [ "${1#-}" != "$1" ]; do
 	case "$1" in
@@ -45,8 +48,13 @@ while [ "${1#-}" != "$1" ]; do
 		shift
 		shift
 		;;
-	-l | --list)
+	-l)
 		list=true
+		shift
+		;;
+	-g)
+		shift
+		logfile="$1"
 		shift
 		;;
 	-*)
@@ -109,8 +117,11 @@ fi
 export zonefs_mntdir="$bdev-mnt"
 mkdir -p "$zonefs_mntdir"
 
-logfile="$bdev-zonefs-tests.log"
-rm -f "${logfile}"
+if [ "$logfile" == "" ]; then
+	logfile="$bdev-zonefs-tests.log"
+	rm -f "${logfile}"
+fi
+
 passed=0
 total=0
 rc=0
