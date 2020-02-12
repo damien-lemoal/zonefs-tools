@@ -56,16 +56,28 @@ function destroy_zoned_nullb()
 	rmdir /sys/kernel/config/nullb/nullb$n
 }
 
+declare -i rc=0
 for c in 16 1 0; do
 
 	echo ""
 	echo "Run tests against device with $c conventional zones..."
 	echo ""
 	nulld=$(create_zoned_nullb $c)
-	./zonefs-tests.sh "/dev/nullb$nulld"
+	if ! ./zonefs-tests.sh "/dev/nullb$nulld"; then
+		rc=1
+	fi
+
 	destroy_zoned_nullb "$nulld"
 
 done
 
 rmmod null_blk >> /dev/null 2>&1
 
+echo ""
+if [ "$rc" != 0 ]; then
+	echo "Failures detected"
+	exit 1
+fi
+
+echo "All tests passed"
+exit 0

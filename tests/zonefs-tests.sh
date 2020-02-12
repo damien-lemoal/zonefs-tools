@@ -200,8 +200,11 @@ echo "$passed / $total tests passed"
 
 umount "$zonefs_mntdir" >> /dev/null 2>&1
 rm -rf "$zonefs_mntdir" >> /dev/null 2>&1
-
 rm -f local-* >> /dev/null 2>&1
 
-exit $rc
+if [ "$passed" != "$total" ]; then
+	exit 1
+fi
+
+exit 0
 
