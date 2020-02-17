@@ -89,6 +89,9 @@ function zonefs_mount_err()
 
 function zonefs_umount()
 {
+	# Make sure udev is not looking at the FS
+	udevadm settle >> /dev/null 2>&1
+
 	umount "$zonefs_mntdir" || \
 		exit_failed " --> umount FAILED"
 }
