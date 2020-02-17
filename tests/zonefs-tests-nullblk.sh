@@ -11,6 +11,14 @@ if [ $(id -u) -ne 0 ]; then
         exit 1
 fi
 
+# trap ctrl-c interruptions
+aborted=0
+trap ctrl_c INT
+
+function ctrl_c() {
+	aborted=1
+}
+
 scriptdir="$(cd "$(dirname "$0")" && pwd)"
 
 modprobe null_blk nr_devices=0
@@ -73,6 +81,10 @@ for c in 16 1 0; do
 	fi
 
 	destroy_zoned_nullb "$nulld"
+
+	if [ "$aborted" == 1 ]; then
+		break
+	fi
 
 done
 

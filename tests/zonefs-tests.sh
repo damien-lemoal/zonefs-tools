@@ -6,6 +6,14 @@
 #
 . scripts/test_lib
 
+# trap ctrl-c interruptions
+aborted=0
+trap ctrl_c INT
+
+function ctrl_c() {
+	aborted=1
+}
+
 function test_num()
 {
 	basename "$1" | cut -d "." -f1
@@ -202,6 +210,10 @@ for t in "${tests[@]}"; do
 	fi
 	((total++))
 	echo -e "$status"
+
+	if [ "$aborted" == 1 ]; then
+		break
+	fi
 
 	na=0
 done
