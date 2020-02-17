@@ -68,7 +68,7 @@ for c in 16 1 0; do
 	nulld=$(create_zoned_nullb $c)
 
 	logfile="nullb${nulld}-cnv${c}-zonefs-tests.log"
-	if ./zonefs-tests.sh "-g" "$logfile" "/dev/nullb$nulld"; then
+	if ! ./zonefs-tests.sh "-g" "$logfile" "/dev/nullb$nulld"; then
 		rc=1
 	fi
 
