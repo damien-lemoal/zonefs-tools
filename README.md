@@ -57,8 +57,8 @@ default file system operation:
 The *zonefs-tools* project source code is distributed under the terms of the
 GNU General Public License v2.0 or later
 ([GPL-v2](https://opensource.org/licenses/GPL-2.0)).
-A copy of this license with *zonefs-tools* copyright can be found in the file
-[COPYING.GPL].
+A copy of this license with *zonefs-tools* copyright can be found in the files
+[LICENSES/GPL-2.0-or-later.txt] and [COPYING.GPL].
 
 All source files in *zonefs-tools* contain the GPL-2.0-or-later license SPDX
 short identifier in place of the full license text.
@@ -66,6 +66,16 @@ short identifier in place of the full license text.
 ```
 SPDX-License-Identifier: GPL-2.0-or-later
 ```
+
+Some files such as the Makefile.am files and the `.gitignore` file are public
+domain specified by the CC0 1.0 Universal (CC0 1.0) Public Domain Dedication.
+These files are identified with the following SPDX header.
+
+```
+SPDX-License-Identifier: CC0-1.0
+```
+
+See [LICENSES/CC0-1.0.txt] for the full text of this license.
 
 ## Compilation and Installation
 
