@@ -1,4 +1,4 @@
-//* SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: GPL-2.0-or-later
 /*
  * This file is part of zonefs tools.
  * Copyright (c) 2019 Western Digital Corporation or its affiliates.
