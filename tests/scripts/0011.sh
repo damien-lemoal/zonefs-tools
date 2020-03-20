@@ -10,6 +10,8 @@ if [ $# == 0 ]; then
 	exit 0
 fi
 
+require_program mkfs.f2fs
+
 # Format with f2fs
 mkfs.f2fs -m "$1" || exit_failed " --> f2fs format FAILED"
 
