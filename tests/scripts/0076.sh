@@ -12,6 +12,8 @@ if [ $# == 0 ]; then
         exit 0
 fi
 
+require_program fio
+
 if [ "$nr_cnv_files" == 0 ]; then
 	exit_skip
 fi

@@ -12,6 +12,8 @@ if [ $# == 0 ]; then
         exit 0
 fi
 
+require_program fio
+
 echo "Check sequential file unaligned write (sync IO)"
 
 zonefs_mkfs "$1"
