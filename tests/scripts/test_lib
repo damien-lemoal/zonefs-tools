@@ -268,3 +268,8 @@ function block_size()
 {
         stat -f -c "%S" "$1"
 }
+
+function require_program()
+{
+	type -p "$1" 2> /dev/null || exit_skip
+}
