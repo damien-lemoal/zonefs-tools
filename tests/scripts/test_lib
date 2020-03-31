@@ -27,6 +27,11 @@ function get_zone_sectors()
 	cat "/sys/class/block/$(basename $1)/queue/chunk_sectors"
 }
 
+function get_zone_append_max_bytes()
+{
+	cat "/sys/class/block/$(basename $1)/queue/zone_append_max_bytes"
+}
+
 function get_zone_bytes()
 {
 	echo $(( $(get_zone_sectors "$1") * 512 ))
