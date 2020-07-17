@@ -137,7 +137,7 @@ rc=0
 # Drive parameters
 export nr_zones=$(get_nr_zones "$dev")
 export zone_sectors=$(get_zone_sectors "$dev")
-export zone_bytes=$(get_zone_bytes "$dev")
+export zone_bytes=$(( zone_sectors * 512 ))
 export nr_cnv_zones=$(get_nr_cnv_zones "$dev")
 export nr_seq_zones=$(get_nr_seq_zones "$dev")
 

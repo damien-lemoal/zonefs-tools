@@ -32,11 +32,6 @@ function get_zone_append_max_bytes()
 	cat "/sys/class/block/$(basename $1)/queue/zone_append_max_bytes"
 }
 
-function get_zone_bytes()
-{
-	echo $(( $(get_zone_sectors "$1") * 512 ))
-}
-
 function zone_info()
 {
 	${blkzone} report --count 1 --offset "$2" "$1" || exit 0
