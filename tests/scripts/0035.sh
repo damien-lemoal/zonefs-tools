@@ -19,7 +19,8 @@ zonefs_mount "$1"
 
 nr_blocks=$(block_number "$zonefs_mntdir")
 sz_blocks=$(block_size "$zonefs_mntdir")
-nr_expected_blocks=$(( (nr_zones - 1 ) * zone_bytes / sz_blocks ))
+capacity_bytes=$(( total_usable_sectors * 512))
+nr_expected_blocks=$(( capacity_bytes / sz_blocks ))
 
 if [ "$nr_blocks" != "$nr_expected_blocks" ]; then
         echo " --> Invalid total number of blocks:"

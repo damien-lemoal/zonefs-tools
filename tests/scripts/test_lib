@@ -64,6 +64,21 @@ function get_zone_capacity_bytes()
 	echo $(( $(get_zone_capacity_sectors "$1" "$2") * 512 ))
 }
 
+function get_total_zone_capacity_sectors()
+{
+	local total_cap=0
+
+	# Skip the first zone as it contains the super block
+	list=$(blkzone report -o "$zone_sectors" "$1")
+	while read -r z; do
+		c_hex=$(echo "$z" | cut -d "," -f3 | cut -d" " -f3)
+		c=$((c_hex))
+		total_cap=$(( total_cap + c ))
+	done <<< "$list"
+
+	echo $total_cap
+}
+
 function exit_skip()
 {
 	exit 2
