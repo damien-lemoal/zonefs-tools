@@ -122,6 +122,12 @@ if [ "$(<"/sys/class/block/$bdev/queue/zoned")" == "none" ]; then
         exit 1
 fi
 
+if ! blkzone_has_zone_capacity "$dev"; then
+	echo "blkzone utility is not reporting zone capacity."
+	echo "util-linux update needed."
+        exit 1
+fi
+
 export zonefs_mntdir="$bdev-mnt"
 mkdir -p "$zonefs_mntdir"
 

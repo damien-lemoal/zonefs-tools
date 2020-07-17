@@ -39,14 +39,29 @@ function zone_info()
 
 function zone_is_conventional()
 {
-	z="$(zone_info $1 $2)"
-	echo "$z" | grep -q "CONVENTIONAL" && return 0 || return 1
+	echo "$(zone_info $1 $2)" | grep -q "CONVENTIONAL" && return 0 || return 1
 }
 
 function zone_is_full()
 {
-	z="$(zone_info $1 $2)"
-	echo "$z" | grep -q "zcond:14(fu)" && return 0 || return 1
+	echo "$(zone_info $1 $2)" | grep -q "zcond:14(fu)" && return 0 || return 1
+}
+
+function blkzone_has_zone_capacity()
+{
+	echo "$(zone_info $1 0)" | grep -q "cap " && return 0 || return 1
+
+}
+
+function get_zone_capacity_sectors()
+{
+	c=$(echo "$(zone_info $1 $2)" | cut -d "," -f3 | cut -d" " -f3)
+	echo $((c))
+}
+
+function get_zone_capacity_bytes()
+{
+	echo $(( $(get_zone_capacity_sectors "$1" "$2") * 512 ))
 }
 
 function exit_skip()
@@ -189,6 +204,7 @@ function check_size()
 	aggr_cnv=$1
 
 	if [ -d "$zonefs_mntdir/cnv/" ]; then
+		# Note: conventional zone capacity is always equal to the zone size
 		if $aggr_cnv; then
 			expected_sz=$(( zone_bytes * (nr_cnv_zones - 1) ))
 		else
