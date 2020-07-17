@@ -8,7 +8,7 @@
 . scripts/test_lib
 
 if [ $# == 0 ]; then
-	echo "Sequential file synchronous write bigger than max-append size"
+	echo "Sequential file large synchronous write"
         exit 0
 fi
 
@@ -26,19 +26,17 @@ truncate --no-create --size=0 "$zonefs_mntdir"/seq/0 || \
 pbs=$(block_size "$1")
 mask=$(($pbs - 1))
 
-bs=$(get_zone_append_max_bytes /dev/nullb0)
+bs=$(get_zone_append_max_bytes "$1")
 bs=$(($bs + $pbs))
 
 bs=$((($bs + $mask & ~$mask)))
 
-
 fio --name=seqwrite --filename="$zonefs_mntdir"/seq/0 \
     --create_on_open=0 --allow_file_create=0 --file_append=1 --unlink=0 \
-    --rw=write --ioengine=psync --iodepth=64 \
+    --rw=write --ioengine=psync --iodepth=64 --max-jobs=8 \
     --bs="$bs" --size="$sz" --verify=md5 --do_verify=1 \
     --continue_on_error=none --direct=1 || \
 	exit_failed "fio write FAILED"
-
 
 zonefs_umount
 
