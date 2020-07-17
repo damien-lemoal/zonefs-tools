@@ -152,15 +152,20 @@ export total_usable_sectors=$(get_total_zone_capacity_sectors "$dev")
 if [ "$nr_cnv_zones" == 0 ]; then
 	nr_cnv_files=0
 	nr_seq_files=$(( nr_seq_zones - 1 ))
+	seq_file_0_zone_start_sector=$(( zone_sectors * 2 ))
 elif [ "$nr_cnv_zones" == 1 ]; then
 	nr_cnv_files=0
 	nr_seq_files=$nr_seq_zones
+	seq_file_0_zone_start_sector=$zone_sectors
 else
 	nr_cnv_files=$(( nr_cnv_zones - 1 ))
 	nr_seq_files=$nr_seq_zones
+	seq_file_0_zone_start_sector=$(( nr_cnv_zones * zone_sectors ))
 fi
 export nr_cnv_files
 export nr_seq_files
+export seq_file_0_zone_start_sector
+export seq_file_0_max_size=$(get_zone_capacity_bytes "$dev" $seq_file_0_zone_start_sector)
 
 # Set IO scheduler
 echo deadline >"/sys/block/$bdev/queue/scheduler"

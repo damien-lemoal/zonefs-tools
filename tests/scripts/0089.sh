@@ -31,7 +31,7 @@ sz=$(file_size "$zonefs_mntdir"/seq/0)
 # mmpa(MAP_WRITE) should fail
 fio --name=cnv_mmapwr --filename="$zonefs_mntdir"/seq/0 \
     --create_on_open=0 --allow_file_create=0 --file_append=0 --unlink=0 \
-    --rw=randwrite --ioengine=mmap --size="$sz" \
+    --rw=randwrite --ioengine=mmap --size="$sz" --max-jobs=8 \
     --bs=4096 --continue_on_error=none && \
     exit_failed " --> FAILED"
 
@@ -42,14 +42,14 @@ truncate --no-create --size=0 "$zonefs_mntdir"/seq/0 || \
 # Fill file
 fio --name=seqwrite --filename="$zonefs_mntdir"/seq/0 \
     --create_on_open=0 --allow_file_create=0 --file_append=1 --unlink=0 \
-    --rw=write --ioengine=libaio --iodepth=64 \
+    --rw=write --ioengine=libaio --iodepth=64 --max-jobs=8 \
     --bs=4096 --size="$maxsize" --verify=md5 --do_verify=1 \
     --continue_on_error=none --direct=1 || \
 	exit_failed "fio write FAILED"
 
 sz=$(file_size "$zonefs_mntdir"/seq/0)
-[ "$sz" != "$zone_bytes" ] && \
-	exit_failed " --> Invalid file size $sz B, expected $zone_bytes B"
+[ "$sz" != "$seq_file_0_max_size" ] && \
+	exit_failed " --> Invalid file size $sz B, expected $seq_file_0_max_size B"
 
 zonefs_umount
 
@@ -58,7 +58,7 @@ echo "Check sequential file mmap read"
 zonefs_mount "$1"
 
 fio --name=seq_rndrd --filename="$zonefs_mntdir"/seq/0 \
-    --rw=randread --ioengine=mmap \
+    --rw=randread --ioengine=mmap --max-jobs=8 \
     --create_on_open=0 --allow_file_create=0 --unlink=0 \
     --bs=4096 --size="$maxsize" --verify=md5 --do_verify=1 \
     --continue_on_error=none || \

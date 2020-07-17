@@ -25,12 +25,12 @@ sz=$(file_size "$zonefs_mntdir"/seq/0)
 	exit_failed " --> Invalid file size $sz B, expected 4096 B"
 
 dd if=/dev/zero of="$zonefs_mntdir"/seq/0 oflag=direct,append bs=4096 \
-	count=$(( zone_bytes / 4096 - 1)) conv=notrunc || \
+	count=$(( seq_file_0_max_size / 4096 - 1)) conv=notrunc || \
 	exit_failed " --> FAILED"
 
 sz=$(file_size "$zonefs_mntdir"/seq/0)
-[ "$sz" != "$zone_bytes" ] && \
-	exit_failed " --> Invalid file size $sz B, expected $zone_bytes B"
+[ "$sz" != "$seq_file_0_max_size" ] && \
+	exit_failed " --> Invalid file size $sz B, expected $seq_file_0_max_size B"
 
 zonefs_umount
 

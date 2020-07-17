@@ -20,14 +20,14 @@ zonefs_mkfs "$1"
 zonefs_mount "$1"
 fio --name=seq_wr --filename="$zonefs_mntdir"/seq/0 \
     --create_on_open=0 --allow_file_create=0 --file_append=1 --unlink=0 \
-    --rw=write --ioengine=libaio --iodepth=8 \
-    --bs=131072 --size="$zone_bytes" --verify=md5 --do_verify=1 \
+    --rw=write --ioengine=libaio --iodepth=8 --max-jobs=8 \
+    --bs=131072 --size="$seq_file_0_max_size" --verify=md5 --do_verify=1 \
     --continue_on_error=none --direct=1 || \
 	exit_failed " --> FAILED"
 
 sz=$(file_size "$zonefs_mntdir"/seq/0)
-[ "$sz" != "$zone_bytes" ] && \
-	exit_failed " --> Invalid file size $sz B, expected $zone_bytes B"
+[ "$sz" != "$seq_file_0_max_size" ] && \
+	exit_failed " --> Invalid file size $sz B, expected $seq_file_0_max_size B"
 
 zonefs_umount
 
