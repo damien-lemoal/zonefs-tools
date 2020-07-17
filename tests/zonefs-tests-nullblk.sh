@@ -5,10 +5,36 @@
 # Copyright (C) 2019 Western Digital Corporation or its affiliates.
 #
 
+# Zone size in MB
+zone_size=64
+zone_capacity=$zone_size
+
+function usage() {
+	echo "Usage: $0 [options]"
+	echo "Options:"
+	echo "\t-h | --help:	Display help"
+	echo "\t-c | --cap:	Test with zone capacity < zone size (default: off)"
+}
+
 # Check credentials
 if [ $(id -u) -ne 0 ]; then
         echo "Root credentials are needed to run tests."
         exit 1
+fi
+
+# Check options
+if [ $# != 0 ]; then
+	for arg in "$@"; do
+		if [ "$arg" == "-c" ] || [ "$arg" == "--cap" ]; then
+			zone_capacity=$(( zone_size - 1 ))
+		elif [ "$arg" == "-h" ] || [ "$arg" == "--help" ]; then
+			usage "$0"
+			exit 0
+		else
+			echo "Invalid option $arg"
+			exit 1
+		fi
+	done
 fi
 
 # trap ctrl-c interruptions
@@ -38,6 +64,11 @@ function create_zoned_nullb()
 	dev="/sys/kernel/config/nullb/nullb$n"
 	mkdir "$dev"
 
+	if [ $zone_capacity != $zone_size ] && [ ! -w "$dev"/zone_capacity ]; then
+		echo "Zone capacity is not supported by nullblk"
+		exit 1
+	fi
+
 	echo 4096 > "$dev"/blocksize
 	echo 0 > "$dev"/completion_nsec
 	echo 0 > "$dev"/irqmode
@@ -48,7 +79,10 @@ function create_zoned_nullb()
 	echo 1 > "$dev"/memory_backed
 
 	echo 1 > "$dev"/zoned
-	echo 64 > "$dev"/zone_size
+	echo "$zone_size" > "$dev"/zone_size
+	if [ $zone_capacity != $zone_size ]; then
+		echo "$zone_capacity" > "$dev"/zone_capacity
+	fi
 	echo $1 > "$dev"/zone_nr_conv
 
 	echo 1 > "$dev"/power
@@ -72,6 +106,7 @@ for c in 16 1 0; do
 
 	echo ""
 	echo "Run tests against device with $c conventional zones..."
+	echo "Zone size: $zone_size MB, zone capacity: $zone_capacity MB"
 	echo ""
 	nulld=$(create_zoned_nullb $c)
 
