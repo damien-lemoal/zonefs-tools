@@ -22,7 +22,7 @@ sz_blocks=$(block_size "$zonefs_mntdir")
 nr_expected_blocks=$(( (nr_zones - 1 ) * zone_bytes / sz_blocks ))
 
 if [ "$nr_blocks" != "$nr_expected_blocks" ]; then
-        echo " --> Invalid number of total number of blocks:"
+        echo " --> Invalid total number of blocks:"
         echo " --> Expected $nr_expected_blocks, got $nr_blocks"
         exit 1
 fi

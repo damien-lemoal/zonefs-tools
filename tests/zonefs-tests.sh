@@ -185,7 +185,7 @@ run_test() {
 
 echo "zonefs-tests on $dev:"
 echo "  $nr_zones zones ($nr_cnv_zones conventional zones, $nr_seq_zones sequential zones)"
-echo "  $zone_sectors 512B sectors per zone ($(( zone_bytes / 1048576 )) MiB)"
+echo "  $zone_sectors 512B sectors zone size ($(( zone_bytes / 1048576 )) MiB)"
 echo "Running tests"
 
 for t in "${tests[@]}"; do
