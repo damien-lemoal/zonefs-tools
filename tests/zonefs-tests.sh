@@ -141,6 +141,7 @@ total=0
 rc=0
 
 # Drive parameters
+echo "Gathering information on $dev..."
 export nr_zones=$(get_nr_zones "$dev")
 export zone_sectors=$(get_zone_sectors "$dev")
 export zone_bytes=$(( zone_sectors * 512 ))
