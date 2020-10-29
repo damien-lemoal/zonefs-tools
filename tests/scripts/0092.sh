@@ -11,8 +11,9 @@ generate_fio() {
 	local nseq="$1"
 
 	filename="$zonefs_mntdir/seq/0"
-	for (( i = 1; i < $nseq; i++ )); do
-		filename="$filename:$zonefs_mntdir"/seq/$i
+	for (( i=1; i<$nseq; i++ )); do
+		truncate -s 0 "$zonefs_mntdir/seq/$i"
+		filename="$filename:$zonefs_mntdir/seq/$i"
 	done
 
 	cat > 0092.fio << EOF
@@ -22,8 +23,7 @@ allow_file_create=0
 file_append=1
 unlink=0
 rw=write
-ioengine=libaio
-iodepth=64
+ioengine=psync
 bs=4k
 filesize=$(file_max_size "$zonefs_mntdir"/seq/0)
 continue_on_error=none
@@ -49,7 +49,6 @@ require_program fio
 echo "Check explicit-open mounts"
 
 max_open_zones=$(get_max_open_zones "$1")
-
 if [ "$max_open_zones" == 0 ]; then
 	exit_skip
 fi
@@ -58,21 +57,20 @@ zonefs_mkfs "$1"
 zonefs_mount "-o explicit-open $1"
 
 # fio write with less than $max_open_zones must succeed
-if [ "$max_open_zones" -gt 1 ]; then
-
-	generate_fio $(($max_open_zones - 1))
-	
+echo "Check write in less than max open zones files"
+if [ $max_open_zones -gt 1 ]; then
+	generate_fio $(( $max_open_zones - 1 ))
 	fio 0092.fio || exit_failed "fio write failed"
 fi
 
 # fio write with $max_open_zones must succeed
+echo "Check write in exactly max open zones files"
 generate_fio $max_open_zones
-
 fio 0092.fio || exit_failed "fio write failed"
 
 # fio write with 2 * $max_open_zones must fail
-generate_fio $(($max_open_zones * 2))
-
+echo "Check write in double max open zones files"
+generate_fio $(( $max_open_zones * 2 ))
 fio 0092.fio && exit_failed "fio write succeeded (should fail)"
 
 zonefs_umount
