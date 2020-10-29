@@ -9,11 +9,18 @@
 zone_size=64
 zone_capacity=$zone_size
 
+# Use max open limit (default off)
+zone_max_open=0
+
+# Capacity (MB)
+capacity=4096
+
 function usage() {
 	echo "Usage: $0 [options]"
 	echo "Options:"
-	echo "\t-h | --help:	Display help"
-	echo "\t-c | --cap:	Test with zone capacity < zone size (default: off)"
+	echo "	-h | --help:	Display help"
+	echo "	-c | --cap:	Test with zone capacity < zone size (default: off)"
+	echo "	-o | --moz:	Test with max open zone limit set (default: no limit)"
 }
 
 # Check credentials
@@ -23,19 +30,26 @@ if [ $(id -u) -ne 0 ]; then
 fi
 
 # Check options
-if [ $# != 0 ]; then
-	for arg in "$@"; do
-		if [ "$arg" == "-c" ] || [ "$arg" == "--cap" ]; then
+while [[ $# -gt 0 ]]; do
+        case "$1" in
+		"-c" | "--cap")
 			zone_capacity=$(( zone_size - 1 ))
-		elif [ "$arg" == "-h" ] || [ "$arg" == "--help" ]; then
+                        shift
+                        ;;
+		"-o" | "--moz")
+			zone_max_open=$(( $capacity / $zone_size / 8 ))
+                        shift
+                        ;;
+		"-h" | "--help")
 			usage "$0"
 			exit 0
-		else
-			echo "Invalid option $arg"
+                        ;;
+                *)
+			echo "Invalid option $1"
 			exit 1
-		fi
-	done
-fi
+                        ;;
+        esac
+done
 
 # trap ctrl-c interruptions
 aborted=0
@@ -74,7 +88,7 @@ function create_zoned_nullb()
 	echo 0 > "$dev"/irqmode
 	echo 2 > "$dev"/queue_mode
 
-	echo 4096 > "$dev"/size
+	echo $capacity > "$dev"/size
 	echo 1024 > "$dev"/hw_queue_depth
 	echo 1 > "$dev"/memory_backed
 
@@ -84,6 +98,7 @@ function create_zoned_nullb()
 		echo "$zone_capacity" > "$dev"/zone_capacity
 	fi
 	echo $1 > "$dev"/zone_nr_conv
+	echo "$zone_max_open" > "$dev"/zone_max_open
 
 	echo 1 > "$dev"/power
 
@@ -106,7 +121,8 @@ for c in 16 1 0; do
 
 	echo ""
 	echo "Run tests against device with $c conventional zones..."
-	echo "Zone size: $zone_size MB, zone capacity: $zone_capacity MB"
+	echo "    Zone size: $zone_size MB, zone capacity: $zone_capacity MB"
+	echo "    $zone_max_open max open zones"
 	echo ""
 	nulld=$(create_zoned_nullb $c)
 
