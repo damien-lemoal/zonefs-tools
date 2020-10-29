@@ -34,6 +34,11 @@ filename=$filename
 EOF
 }
 
+function cleanup {
+	rm -f 0092.fio 2>&1 /dev/null
+}
+trap cleanup EXIT
+
 if [ $# == 0 ]; then
 	echo "explicit-open mounts"
         exit 0
@@ -52,27 +57,23 @@ fi
 zonefs_mkfs "$1"
 zonefs_mount "-o explicit-open $1"
 
-
 # fio write with less than $max_open_zones must succeed
 if [ "$max_open_zones" -gt 1 ]; then
 
 	generate_fio $(($max_open_zones - 1))
 	
 	fio 0092.fio || exit_failed "fio write failed"
-	rm 0092.fio
 fi
 
 # fio write with $max_open_zones must succeed
 generate_fio $max_open_zones
 
 fio 0092.fio || exit_failed "fio write failed"
-rm 0092.fio
 
 # fio write with 2 * $max_open_zones must fail
 generate_fio $(($max_open_zones * 2))
 
 fio 0092.fio && exit_failed "fio write succeeded (should fail)"
-rm 0092.fio
 
 zonefs_umount
 
