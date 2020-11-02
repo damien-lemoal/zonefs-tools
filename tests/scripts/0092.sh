@@ -35,7 +35,7 @@ EOF
 }
 
 function cleanup {
-	rm -f 0092.fio 2>&1 /dev/null
+	rm -f 0092.fio > /dev/null 2>&1
 }
 trap cleanup EXIT
 
