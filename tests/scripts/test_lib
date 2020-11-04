@@ -34,7 +34,13 @@ function get_zone_append_max_bytes()
 
 function get_max_open_zones()
 {
-	cat "/sys/class/block/$(basename $1)/queue/max_open_zones"
+	local bdev="$(basename $1)"
+
+	if [ -f "/sys/class/block/$bdev/queue/max_open_zones" ]; then
+		cat "/sys/class/block/$bdev/queue/max_open_zones"
+	else
+		echo "0"
+	fi
 }
 
 function zone_info()

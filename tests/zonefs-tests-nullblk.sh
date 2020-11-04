@@ -98,7 +98,10 @@ function create_zoned_nullb()
 		echo "$zone_capacity" > "$dev"/zone_capacity
 	fi
 	echo $1 > "$dev"/zone_nr_conv
-	echo "$zone_max_open" > "$dev"/zone_max_open
+
+	if [ -f "$dev"/zone_max_open ]; then
+		echo "$zone_max_open" > "$dev"/zone_max_open
+	fi
 
 	echo 1 > "$dev"/power
 
