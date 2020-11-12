@@ -99,6 +99,20 @@ function exit_failed()
 	exit 1
 }
 
+function clear_sb()
+{
+	local nrcnv=$(get_nr_cnv_zones "$1")
+
+	# Clear super block for -f tests
+	if [ $nrcnv == 0 ]; then
+		blkzone reset --offset 0 -c 1 "$1" ||
+			(echo "Reset super block zone failed"; exit 1)
+	else
+		dd if=/dev/zero of="$1" bs=4096 oflag=direct count=1 ||
+			(echo "Clear super block failed"; exit 1)
+	fi
+}
+
 function zonefs_mkfs()
 {
 	IFS=' ';

@@ -5,17 +5,12 @@
 # Copyright (C) 2019 Western Digital Corporation or its affiliates.
 #
 
+. scripts/test_lib
+
 if [ $# == 0 ]; then
 	echo "mkzonefs (options)"
 	exit 0
 fi
-
-function clear_sb()
-{
-	# Clear super block for -f tests
-	dd if=/dev/zero of="$1" bs=4096 oflag=direct count=1 ||
-		(echo "Clear super block failed"; exit 1)
-}
 
 # Test various good mkzonefs options
 OPTS_OK=(""
@@ -41,8 +36,7 @@ for ((i = 0; i < ${#OPTS_OK[@]}; i++)); do
 done
 
 # Test various bad mkzonefs options
-OPTS_BAD=(""
-	  "-bad-option"
+OPTS_BAD=("-bad-option"
 	  "-o"
 	  "-o invalid_feature"
 	  "-o invalid,,list")
