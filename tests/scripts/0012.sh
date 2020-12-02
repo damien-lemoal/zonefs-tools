@@ -13,10 +13,14 @@ if [ $# == 0 ]; then
 fi
 
 # Not a block device
+echo "# Trying /dev/console"
+
 mkzonefs /dev/console && exit_failed " --> SUCCESS (should FAIL)"
 
-# Regular disk
+# Regular block device
 nulldev=$(create_nullb)
+echo "# Trying regular block device /dev/nullb$nulldev"
+
 mkzonefs "/dev/nullb$nulldev" && exit_failed " --> SUCCESS (should FAIL)"
 destroy_nullb $nulldev
 

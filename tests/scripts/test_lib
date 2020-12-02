@@ -293,6 +293,7 @@ function create_nullb()
 	done
 
 	mkdir /sys/kernel/config/nullb/nullb$n
+	echo 0 > /sys/kernel/config/nullb/nullb$n/zoned
 	echo 1 > /sys/kernel/config/nullb/nullb$n/power
 
 	echo "$n"
