@@ -5,9 +5,8 @@
  *
  * Authors: Damien Le Moal (damien.lemoal@wdc.com)
  */
-
-#ifndef __ZONEFS_H__
-#define __ZONEFS_H__
+#ifndef ZONEFS_H
+#define ZONEFS_H
 
 #define _LARGEFILE64_SOURCE
 
@@ -137,4 +136,4 @@ int zonefs_reset_zones(struct zonefs_dev *dev);
 #define ZONEFS_STATIC_ASSERT(cond) \
 	void zonefs_static_assert(int dummy[(cond) ? 1 : -1])
 
-#endif /* __ZONEFS_H__ */
+#endif /* ZONEFS_H */
