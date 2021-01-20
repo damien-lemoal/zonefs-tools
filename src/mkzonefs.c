@@ -138,6 +138,7 @@ static void mkzonefs_usage(void)
 {
 	printf("Usage: mkzonefs [options] <device path>\n");
 	printf("Options:\n"
+	       "  --version     : Print version number and exit\n"
 	       "  --help | -h   : General help message\n"
 	       "  -v            : Verbose output\n"
 	       "  -f            : Force overwrite of existing content\n"
@@ -169,12 +170,21 @@ int main(int argc, char **argv)
 
 	/* Parse options */
 	for (i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "--version") == 0) {
+			printf("mkzonefs, version %s\n", PACKAGE_VERSION);
+			printf("Copyright (C) 2019, Western Digital Corporation"
+			       " or its affiliates.\n");
+			return 0;
+		}
+
 		if (strcmp(argv[i], "--help") == 0 ||
 		    strcmp(argv[i], "-h") == 0) {
 			mkzonefs_usage();
 			printf("See \"man mkzonefs\" for more information\n");
 			return 0;
-		} else if (strcmp(argv[i], "-f") == 0) {
+		}
+
+		if (strcmp(argv[i], "-f") == 0) {
 			dev.flags |= ZONEFS_OVERWRITE;
 		} else if (strcmp(argv[i], "-v") == 0) {
 			dev.flags |= ZONEFS_VERBOSE;
