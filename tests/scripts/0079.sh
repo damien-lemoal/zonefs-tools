@@ -23,7 +23,7 @@ echo "Check conventional file mmap write (aggr_cnv)"
 zonefs_mkfs "-o aggr_cnv $1"
 zonefs_mount "$1"
 
-maxsize=$(file_max_size "$zonefs_mntdir"/cnv/0)
+maxsize=$(aggr_cnv_size)
 fio --name=cnv_mmapwr --filename="$zonefs_mntdir"/cnv/0 \
     --rw=randwrite --ioengine=mmap --size="$maxsize" \
     --create_on_open=0 --allow_file_create=0 --file_append=0 --unlink=0 \
@@ -38,7 +38,7 @@ echo "Check conventional file mmap read (aggr_cnv)"
 zonefs_mount "$1"
 
 fio --name=cnv_mmaprd --filename="$zonefs_mntdir"/cnv/0 \
-    --rw=randread --ioengine=mmap -size="$maxsize" \
+    --rw=randread --ioengine=mmap --size="$maxsize" \
     --create_on_open=0 --allow_file_create=0 --file_append=0 --unlink=0 \
     --bs="${iosize}" --verify=md5 --do_verify=1 --continue_on_error=none || \
     exit_failed " --> FAILED"

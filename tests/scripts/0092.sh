@@ -16,6 +16,11 @@ generate_fio() {
 		filename="$filename:$zonefs_mntdir/seq/$i"
 	done
 
+	filesize=$(file_max_size "$zonefs_mntdir"/seq/0)
+	if $short; then
+		filesize=$((zone_sectors * 512 / 64))
+	fi
+
 	cat > 0092.fio << EOF
 [global]
 create_on_open=0
@@ -25,7 +30,7 @@ unlink=0
 rw=write
 ioengine=psync
 bs=${iosize}
-filesize=$(file_max_size "$zonefs_mntdir"/seq/0)
+filesize=${filesize}
 continue_on_error=none
 direct=1
 

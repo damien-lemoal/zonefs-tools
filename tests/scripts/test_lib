@@ -237,6 +237,18 @@ function file_max_size()
 	echo "$(( nr_blocks * block_size ))"
 }
 
+function aggr_cnv_size()
+{
+	size=$(file_max_size "$zonefs_mntdir"/cnv/0)
+	two_zones_size=$((zone_sectors * 2 * 512))
+
+	if $short && ((two_zones_size < size)); then
+		size="${two_zones_size}"
+	fi
+
+	echo "${size}"
+}
+
 function check_size()
 {
 	aggr_cnv=$1

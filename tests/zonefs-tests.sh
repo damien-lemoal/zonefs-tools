@@ -27,6 +27,7 @@ function usage()
 	echo "  -g <file name>: Use file name for the test log file."
 	echo "                  default: <dev name>-zonefs-tests.log"
 	echo "  -t <test num>: Test to execute. Can be specified multiple times."
+	echo "  -s: Run short test"
 	echo "  -h || --help: This help message"
 }
 
@@ -39,6 +40,7 @@ fi
 declare -a tests
 declare list=false
 logfile=""
+export short=false
 
 while [ "${1#-}" != "$1" ]; do
 	case "$1" in
@@ -63,6 +65,10 @@ while [ "${1#-}" != "$1" ]; do
 	-g)
 		shift
 		logfile="$1"
+		shift
+		;;
+	-s)
+		short=true
 		shift
 		;;
 	-*)
