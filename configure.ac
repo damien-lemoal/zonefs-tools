@@ -34,6 +34,8 @@ AC_CHECK_HEADER(linux/fs.h, [],
 		[AC_MSG_ERROR([Couldn't find linux/fs.h])])
 AC_CHECK_HEADER(blkid/blkid.h, [],
 		[AC_MSG_ERROR([Couldn't find blkid/blkid.h])])
+AC_CHECK_HEADER(linux/aio_abi.h, [],
+		[AC_MSG_ERROR([Couldn't find linux/aio_abi.h])])
 AC_CHECK_HEADER(linux/blkzoned.h, [],
 		[AC_MSG_ERROR([Couldn't find linux/blkzoned.h])])
 
@@ -53,6 +55,7 @@ AC_CONFIG_FILES([
 	Makefile
 	man/Makefile
 	src/Makefile
+	tests/tools/Makefile
 ])
 
 AC_OUTPUT

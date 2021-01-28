@@ -29,6 +29,7 @@
 *.x86_64
 *.hex
 src/mkzonefs
+tests/tools/zio
 
 # Kernel compile files
 *.symvers
