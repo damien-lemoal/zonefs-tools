@@ -156,7 +156,7 @@ function check_perm()
 		while read -r line; do
 
 			fp=(${line})
-			f=$(basename "${fp[0]}")
+			f=${fp[0]##*/}
 			perm=${fp[1]}
 
 			if [ "$perm" != "$1" ]; then
@@ -171,7 +171,7 @@ function check_perm()
 	while read -r line; do
 
 		fp=(${line})
-		f=$(basename "${fp[0]}")
+		f=${fp[0]##*/}
 		perm=${fp[1]}
 
 		if [ "$perm" != "$1" ]; then
@@ -189,7 +189,7 @@ function check_uid_gid()
 		while read -r line; do
 
 			fug=(${line})
-			f=$(basename "${fug[0]}")
+			f=${fug[0]##*/}
 			uid=${fug[1]}
 			gid=${fug[2]}
 
@@ -209,7 +209,7 @@ function check_uid_gid()
 	while read -r line; do
 
 		fug=(${line})
-		f=$(basename "${fug[0]}")
+		f=${fug[0]##*/}
 		uid=${fug[1]}
 		gid=${fug[2]}
 
@@ -253,7 +253,7 @@ function check_size()
 		while read -r line; do
 
 			fsz=(${line})
-			f=$(basename "${fsz[0]}")
+			f=${fsz[0]##*/}
 			sz=${fsz[1]}
 
 			if [ "$sz" != "$expected_sz" ]; then
@@ -268,7 +268,7 @@ function check_size()
 	while read -r line; do
 
 		fsz=(${line})
-		f=$(basename "${fsz[0]}")
+		f=${fsz[0]##*/}
 		sz=${fsz[1]}
 
 		if [ "$sz" != "0" ]; then
