@@ -148,6 +148,7 @@ export zone_bytes=$(( zone_sectors * 512 ))
 export nr_cnv_zones=$(get_nr_cnv_zones "$dev")
 export nr_seq_zones=$(get_nr_seq_zones "$dev")
 export total_usable_sectors=$(get_total_zone_capacity_sectors "$dev")
+export iosize=$((4096 * 64))
 
 # Expected number of files
 if [ "$nr_cnv_zones" == 0 ]; then

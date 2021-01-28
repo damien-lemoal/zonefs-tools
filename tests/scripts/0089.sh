@@ -43,7 +43,7 @@ truncate --no-create --size=0 "$zonefs_mntdir"/seq/0 || \
 fio --name=seqwrite --filename="$zonefs_mntdir"/seq/0 \
     --create_on_open=0 --allow_file_create=0 --file_append=1 --unlink=0 \
     --rw=write --ioengine=libaio --iodepth=64 --max-jobs=8 \
-    --bs=4096 --size="$maxsize" --verify=md5 --do_verify=1 \
+    --bs="${iosize}" --size="$maxsize" --verify=md5 --do_verify=1 \
     --continue_on_error=none --direct=1 || \
 	exit_failed "fio write FAILED"
 
@@ -60,7 +60,7 @@ zonefs_mount "$1"
 fio --name=seq_rndrd --filename="$zonefs_mntdir"/seq/0 \
     --rw=randread --ioengine=mmap --max-jobs=8 \
     --create_on_open=0 --allow_file_create=0 --unlink=0 \
-    --bs=4096 --size="$maxsize" --verify=md5 --do_verify=1 \
+    --bs="${iosize}" --size="$maxsize" --verify=md5 --do_verify=1 \
     --continue_on_error=none || \
 	exit_failed "fio mmap rand read FAILED"
 
