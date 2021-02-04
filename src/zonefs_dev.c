@@ -602,15 +602,14 @@ int zonefs_finish_zone(struct zonefs_dev *dev, struct blk_zone *zone)
 /*
  * Reset a zone.
  */
-int zonefs_reset_zone(struct zonefs_dev *dev, struct blk_zone *zone)
+static int zonefs_reset_zone(struct zonefs_dev *dev, struct blk_zone *zone)
 {
 	struct blk_zone_range range;
 
-	if (zone->type == BLK_ZONE_TYPE_CONVENTIONAL ||
-	    zone->cond == BLK_ZONE_COND_EMPTY)
+	if (zone->type == BLK_ZONE_TYPE_CONVENTIONAL)
 		return 0;
 
-	/* Non empty sequential zone: reset */
+	/* Sequential zone: reset */
 	range.sector = zone->start;
 	range.nr_sectors = zone->len;
 	if (ioctl(dev->fd, BLKRESETZONE, &range) < 0) {
@@ -631,11 +630,28 @@ int zonefs_reset_zone(struct zonefs_dev *dev, struct blk_zone *zone)
  */
 int zonefs_reset_zones(struct zonefs_dev *dev)
 {
+	struct blk_zone_range range;
 	unsigned int i;
+	int ret;
 
+	/*
+	 * Try to reset all zones. This does not work on all devices so if
+	 * this fails, fall back to resetting zones one at a time.
+	 */
+	range.sector = 0;
+	range.nr_sectors = dev->capacity;
+	ret = ioctl(dev->fd, BLKRESETZONE, &range);
+	if (!ret) {
+		for (i = 0; i < dev->nr_zones; i++)
+			dev->zones[i].wp = dev->zones[i].start;
+		return 0;
+	}
+
+	/* Fallback to zone reset zones one at a time */
 	for (i = 0; i < dev->nr_zones; i++) {
-		if (zonefs_reset_zone(dev, &dev->zones[i]) < 0)
-			return -1;
+		ret = zonefs_reset_zone(dev, &dev->zones[i]);
+		if (ret)
+			return ret;
 	}
 
 	return 0;

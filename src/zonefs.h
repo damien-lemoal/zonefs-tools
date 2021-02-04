@@ -127,7 +127,6 @@ int zonefs_open_dev(struct zonefs_dev *dev, bool check_overwrite);
 void zonefs_close_dev(struct zonefs_dev *dev);
 int zonefs_sync_dev(struct zonefs_dev *dev);
 int zonefs_finish_zone(struct zonefs_dev *dev, struct blk_zone *zone);
-int zonefs_reset_zone(struct zonefs_dev *dev, struct blk_zone *zone);
 int zonefs_reset_zones(struct zonefs_dev *dev);
 
 /*
