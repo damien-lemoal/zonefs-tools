@@ -400,8 +400,12 @@ static int zonefs_check_overwrite(struct zonefs_dev *dev)
 	blkid_probe pr;
 	int ret = -1;
 
-	pr = blkid_new_probe_from_filename(dev->path);
+	pr = blkid_new_probe();
 	if (!pr)
+		goto out;
+
+	ret = blkid_probe_set_device(pr, dev->fd, 0, 0);
+	if (ret < 0)
 		goto out;
 
 	ret = blkid_probe_enable_superblocks(pr, 1);
@@ -480,13 +484,6 @@ int zonefs_open_dev(struct zonefs_dev *dev, bool check_overwrite)
 		return -1;
 	}
 
-	if (check_overwrite && !(dev->flags & ZONEFS_OVERWRITE)) {
-		/* Check for existing valid content */
-		ret = zonefs_check_overwrite(dev);
-		if (ret <= 0)
-			return -1;
-	}
-
 	if (zonefs_dev_mounted(dev)) {
 		fprintf(stderr,
 			"%s is mounted\n",
@@ -502,7 +499,7 @@ int zonefs_open_dev(struct zonefs_dev *dev, bool check_overwrite)
 	}
 
 	/* Open device */
-	dev->fd = open(dev->path, O_RDWR | O_DIRECT);
+	dev->fd = open(dev->path, O_RDWR | O_EXCL);
 	if (dev->fd < 0) {
 		fprintf(stderr,
 			"Open %s failed %d (%s)\n",
@@ -511,13 +508,31 @@ int zonefs_open_dev(struct zonefs_dev *dev, bool check_overwrite)
 		return -1;
 	}
 
-	/* Get device capacity and zone configuration */
-	if (zonefs_get_dev_info(dev) < 0) {
-		zonefs_close_dev(dev);
-		return -1;
+	if (check_overwrite && !(dev->flags & ZONEFS_OVERWRITE)) {
+		/* Check for existing valid content */
+		ret = zonefs_check_overwrite(dev);
+		if (ret <= 0)
+			goto err;
 	}
 
+	/* We need direct writes */
+	ret = fcntl(dev->fd, F_SETFL, O_DIRECT);
+	if (ret) {
+		fprintf(stderr,
+			"Set O_DIRECT failed %d (%s)\n",
+			errno, strerror(errno));
+		goto err;
+	}
+
+	/* Get device capacity and zone configuration */
+	if (zonefs_get_dev_info(dev) < 0)
+		goto err;
+
 	return 0;
+
+err:
+	zonefs_close_dev(dev);
+	return -1;
 }
 
 /*
