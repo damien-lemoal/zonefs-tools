@@ -28,7 +28,6 @@
 *.i*86
 *.x86_64
 *.hex
-
 src/mkzonefs
 
 # Kernel compile files
@@ -44,28 +43,33 @@ modules.order
 Thumbs.db
 desktop.ini
 
-# Mac-specific things (thanks to Michael Aaron Safyan)
+# Mac-specific things
 .DS_Store
+._.DS_Store
 
 # Editors temporary files
 *~
 
 # Autotools stuff
 m4/*.m4
-*.in
 aclocal.m4
 autom4te.cache/
 build-aux/
 configure
+Makefile.in
 Makefile
 config.log
 config.status
 src/stamp-h1
-src/config.h
+config.h
+config.h.in
 .deps
 libtool
 .libs
 .dirstamp
+
+# Built RPMs
+*.rpm
 
 # Tests files
 tests/*.state

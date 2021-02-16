@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# Copyright (c) 2021 Western Digital Corporation or its affiliates.
+
+Name:           zonefs-tools
+Release:        1%{?dist}
+Summary:        User utilities for the zonefs file system
+Group:		System Environment/Libraries
+License:        GPLv2
+URL:		https://github.com/westerndigitalcorporation/zonefs-tools
+Source:         %{name}-%{version}.tar.gz
+
+BuildRequires:  autoconf
+BuildRequires:  autoconf-archive
+BuildRequires:  automake
+BuildRequires:  libtool
+BuildRequires:  libblkid
+BuildRequires:  libuuid
+BuildRequires:  gcc
+
+%description
+zonefs-tools provides the mkzonefs user utility to format zoned
+block devices for use with the zonefs file system.
+
+%prep
+%setup
+
+%build
+sh autogen.sh
+%configure
+%make_build
+
+%install
+rm -rf $RPM_BUILD_ROOT
+mkdir -p $RPM_BUILD_ROOT
+make install PREFIX=%{_prefix} DESTDIR=$RPM_BUILD_ROOT
+chmod -x $RPM_BUILD_ROOT%{_mandir}/man8/*.8
+
+find $RPM_BUILD_ROOT -name '*.la' -delete
+
+%ldconfig_scriptlets
+
+%files
+%{_sbindir}/*
+%{_mandir}/man8/*

@@ -43,6 +43,12 @@ AC_SEARCH_LIBS([blkid_do_fullprobe], [blkid], [],
 AC_SEARCH_LIBS([uuid_generate], [uuid], [],
 	       [AC_MSG_ERROR([Couldn't find libuuid])])
 
+# Checks for rpm package builds
+AC_PATH_PROG([RPMBUILD], [rpmbuild], [notfound])
+AC_PATH_PROG([RPM], [rpm], [notfound])
+AM_CONDITIONAL([BUILD_RPM],
+		[test "x$RPMBUILD" != xnotfound && test "x$RPM" != xnotfound])
+
 AC_CONFIG_FILES([
 	Makefile
 	man/Makefile
