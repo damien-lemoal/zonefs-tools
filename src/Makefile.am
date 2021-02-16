@@ -15,8 +15,8 @@ mkzonefs_LDADD =
 mkzonefs_LDFLAGS = -luuid -lblkid
 
 install-exec-hook:
-	rm -f $(DESTDIR)$(sbindir)/mkfs.zonefs
-	$(LN_S) $(DESTDIR)$(sbindir)/mkzonefs $(DESTDIR)$(sbindir)/mkfs.zonefs
+	(cd $(DESTDIR)${sbindir}; rm -f mkfs.zonefs)
+	(cd $(DESTDIR)${sbindir}; $(LN_S) mkzonefs mkfs.zonefs)
 
 uninstall-hook:
-	rm -f $(DESTDIR)$(sbindir)/mkfs.zonefs
+	(cd $(DESTDIR)${sbindir}; rm -f mkfs.zonefs)
