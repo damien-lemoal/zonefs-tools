@@ -107,6 +107,10 @@ function clear_sb()
 	if [ $nrcnv == 0 ]; then
 		blkzone reset --offset 0 -c 1 "$1" ||
 			(echo "Reset super block zone failed"; exit 1)
+		# Resetting a zone does not clear the page cache of cached zone data
+		# pages. Take a big hammer and clear the page cache to avoid access
+		# to stale data.
+		echo 1 > /proc/sys/vm/drop_caches
 	else
 		dd if=/dev/zero of="$1" bs=4096 oflag=direct count=1 ||
 			(echo "Clear super block failed"; exit 1)
