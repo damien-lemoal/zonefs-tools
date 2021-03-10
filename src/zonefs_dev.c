@@ -78,6 +78,30 @@ static int zonefs_dev_busy(struct zonefs_dev *dev)
 }
 
 /*
+ * Check that the device supports reset all zones operation.
+ * For now, simply exclude DM devices as that operation is never
+ * supported on these devices.
+ */
+static bool zonefs_dev_has_reset_all(struct zonefs_dev *dev)
+{
+	char path[PATH_MAX];
+	struct stat st;
+	int len;
+
+	/* Check if this is a DM device */
+	len = snprintf(path, sizeof(path),
+		       "/sys/block/%s/dm/name",
+		       dev->name);
+	if (len >= PATH_MAX) {
+		fprintf(stderr, "name %s failed: %s\n", path,
+			strerror(ENAMETOOLONG));
+		return false;
+	}
+
+	return stat(path, &st) != 0;
+}
+
+/*
  * Check that the device is a zoned block device.
  */
 static bool zonefs_dev_is_zoned(struct zonefs_dev *dev)
@@ -653,13 +677,15 @@ int zonefs_reset_zones(struct zonefs_dev *dev)
 	 * Try to reset all zones. This does not work on all devices so if
 	 * this fails, fall back to resetting zones one at a time.
 	 */
-	range.sector = 0;
-	range.nr_sectors = dev->capacity;
-	ret = ioctl(dev->fd, BLKRESETZONE, &range);
-	if (!ret) {
-		for (i = 0; i < dev->nr_zones; i++)
-			dev->zones[i].wp = dev->zones[i].start;
-		return 0;
+	if (zonefs_dev_has_reset_all(dev)) {
+		range.sector = 0;
+		range.nr_sectors = dev->capacity;
+		ret = ioctl(dev->fd, BLKRESETZONE, &range);
+		if (!ret) {
+			for (i = 0; i < dev->nr_zones; i++)
+				dev->zones[i].wp = dev->zones[i].start;
+			return 0;
+		}
 	}
 
 	/* Fallback to zone reset zones one at a time */
