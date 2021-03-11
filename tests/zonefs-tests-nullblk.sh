@@ -102,9 +102,9 @@ function create_zoned_nullb()
 	fi
 
 	echo 4096 > "$dev"/blocksize
-	echo 0 > "$dev"/completion_nsec
-	echo 0 > "$dev"/irqmode
 	echo 2 > "$dev"/queue_mode
+	echo 2 > "$dev"/irqmode
+	echo 5000 > "$dev"/completion_nsec
 
 	echo $capacity > "$dev"/size
 	echo 1024 > "$dev"/hw_queue_depth
