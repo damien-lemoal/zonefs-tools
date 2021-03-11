@@ -45,7 +45,7 @@ function cleanup {
 trap cleanup EXIT
 
 if [ $# == 0 ]; then
-	echo "explicit-open mounts"
+	echo "Sequential file explicit-open zone resources"
         exit 0
 fi
 
