@@ -12,17 +12,40 @@ if [ $# == 0 ]; then
         exit 0
 fi
 
-require_program fio
-
 echo "Check sequential file append (async)"
 
 zonefs_mkfs "$1"
 zonefs_mount "$1"
-fio --name=seq_wr --filename="$zonefs_mntdir"/seq/0 \
-    --create_on_open=0 --allow_file_create=0 --file_append=1 --unlink=0 \
-    --rw=write --ioengine=libaio --iodepth=8 --max-jobs=8 \
-    --bs=131072 --size="$seq_file_0_max_size" --verify=md5 --do_verify=1 \
-    --continue_on_error=none --direct=1 || \
+
+# Test with O_APPEND file open
+echo "Check append writes with O_APPEND"
+
+dd if=/dev/zero of="$zonefs_mntdir"/seq/0 oflag=direct bs=4096 count=1 || \
+	exit_failed " --> FAILED"
+
+sz=$(file_size "$zonefs_mntdir"/seq/0)
+[ "$sz" != "4096" ] && \
+	exit_failed " --> Invalid file size $sz B, expected 4096 B"
+
+tools/zio --write --fflag=direct --fflag=append \
+	--size=135168 --async=8 "$zonefs_mntdir"/seq/0 || \
+	exit_failed " --> FAILED"
+
+sz=$(file_size "$zonefs_mntdir"/seq/0)
+[ "$sz" != "$seq_file_0_max_size" ] && \
+	exit_failed " --> Invalid file size $sz B, expected $seq_file_0_max_size B"
+
+# Test with RWF_APPEND I/O flag
+echo "Check append writes with RWF_APPEND"
+
+truncate --no-create --size=0 "$zonefs_mntdir"/seq/0 || \
+        exit_failed " --> FAILED"
+
+dd if=/dev/zero of="$zonefs_mntdir"/seq/0 oflag=direct bs=4096 count=1 || \
+	exit_failed " --> FAILED"
+
+tools/zio --write --fflag=direct --ioflag=append \
+	--size=135168 --async=8 "$zonefs_mntdir"/seq/0 || \
 	exit_failed " --> FAILED"
 
 sz=$(file_size "$zonefs_mntdir"/seq/0)
