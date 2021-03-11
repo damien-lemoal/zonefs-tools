@@ -18,9 +18,11 @@ capacity=4096
 function usage() {
 	echo "Usage: $0 [options]"
 	echo "Options:"
-	echo "	-h | --help:	Display help"
-	echo "	-c | --cap:	Test with zone capacity < zone size (default: off)"
-	echo "	-o | --moz:	Test with max open zone limit set (default: no limit)"
+	echo "    -h | --help   : Display help"
+	echo "    -c | --cap    : Test with zone capacity < zone size (default: off)"
+	echo "    -o | --moz    : Test with max open zone limit set (default: no limit)"
+	echo "    -t <test num> : Test to execute. Can be specified multiple times."
+	echo "                    If used, only the first nullb config is used"
 }
 
 # Check credentials
@@ -28,6 +30,8 @@ if [ $(id -u) -ne 0 ]; then
         echo "Root credentials are needed to run tests."
         exit 1
 fi
+
+testopts=""
 
 # Check options
 while [[ $# -gt 0 ]]; do
@@ -44,6 +48,11 @@ while [[ $# -gt 0 ]]; do
 			usage "$0"
 			exit 0
                         ;;
+		"-t")
+			shift
+			testopts+=" -t $1"
+			shift
+			;;
                 *)
 			echo "Invalid option $1"
 			exit 1
@@ -130,13 +139,14 @@ for c in 16 1 0; do
 	nulld=$(create_zoned_nullb $c)
 
 	logfile="nullb${nulld}-cnv${c}-zonefs-tests.log"
-	if ! ./zonefs-tests.sh "-g" "$logfile" "/dev/nullb$nulld"; then
+
+	if ! ./zonefs-tests.sh ${testopts} "-g" "$logfile" "/dev/nullb$nulld"; then
 		rc=1
 	fi
 
 	destroy_zoned_nullb "$nulld"
 
-	if [ "$aborted" == 1 ]; then
+	if [ "$aborted" == 1 ] || [ "$testopts" != "" ]; then
 		break
 	fi
 
