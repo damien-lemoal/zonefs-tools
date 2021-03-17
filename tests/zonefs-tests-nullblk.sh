@@ -15,6 +15,9 @@ zone_max_open=0
 # Capacity (MB)
 capacity=4096
 
+# Default number of conventional zones to test
+nr_conv=(16 1 0)
+
 function usage() {
 	echo "Usage: $0 [options]"
 	echo "Options:"
@@ -23,6 +26,7 @@ function usage() {
 	echo "    -o | --moz    : Test with max open zone limit set (default: no limit)"
 	echo "    -t <test num> : Test to execute. Can be specified multiple times."
 	echo "                    If used, only the first nullb config is used"
+	echo "    -n <nr conv>  : Specify the number of conventional zones to use."
 }
 
 # Check credentials
@@ -51,6 +55,11 @@ while [[ $# -gt 0 ]]; do
 		"-t")
 			shift
 			testopts+=" -t $1"
+			shift
+			;;
+		"-n")
+			shift
+			nr_conv=($1)
 			shift
 			;;
                 *)
@@ -127,9 +136,8 @@ function destroy_zoned_nullb()
 
 declare -i rc=0
 
-# Do 3 runs for 3 different drives: 16 conventional zones,
-# 1 conventional zone and no conventional zones.
-for c in 16 1 0; do
+# Run all drive configurations (3 by default)
+for c in ${nr_conv[@]}; do
 
 	echo ""
 	echo "Run tests against device with $c conventional zones..."
