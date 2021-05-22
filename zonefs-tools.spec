@@ -2,7 +2,7 @@
 #
 # Copyright (c) 2021 Western Digital Corporation or its affiliates.
 Name:		zonefs-tools
-Version:	1.5.0
+Version:	1.5.1
 Release:	1%{?dist}
 Summary:	User utilities for the zonefs file system
 
@@ -43,5 +43,5 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 %doc README.md CONTRIBUTING
 
 %changelog
-* Sat May 22 2021 Damien Le Moal <damien.lemoal@wdc.com> 1.5.0-1
-- Version 1.5.0 initial package
+* Sat May 22 2021 Damien Le Moal <damien.lemoal@wdc.com> 1.5.1-1
+- Version 1.5.1 initial package
