@@ -118,6 +118,29 @@ the options used to control the installation path.
 > ./configure --help
 ```
 
+## Building RPM Packages
+
+The *rpm* and *rpmbuild* utilities are necessary to build *zonefs-tools* RPM
+packages. Once these utilities are installed, the RPM packages can be built
+using the following command.
+
+```
+$ sh ./autogen.sh
+$ ./configure
+$ make rpm
+```
+
+Four RPM packages are built: a binary package providing *mkzonefs* executable
+and its documentation and license files, a source RPM package, a *debuginfo*
+RPM package and a *debugsource* RPM package.
+
+The source RPM package can be used to build the binary and debug RPM packages
+outside of *zonefs-tools* source tree using the following command.
+
+```
+$ rpmbuild --rebuild zonefs-tools-<version>.src.rpm
+```
+
 ## Usage
 
 *mkzonefs* detailed usage is as follows:
