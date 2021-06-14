@@ -17,16 +17,13 @@ RPMARCH=`$(RPM) --eval %_target_cpu`
 rpm: dist
 	@echo "Building RPM package..."
 	@mkdir -p $(rpmdir)
-	@mv zonefs-tools-$(PACKAGE_VERSION).tar.gz v$(PACKAGE_VERSION).tar.gz
-	$(RPMBUILD) -ta --clean -D "_topdir $(rpmdir)" v$(PACKAGE_VERSION).tar.gz
+	$(RPMBUILD) -ta --clean -D "_topdir $(rpmdir)" zonefs-tools-$(PACKAGE_VERSION).tar.gz
 	@mv -f $(rpmdir)/RPMS/$(RPMARCH)/*.rpm $(abs_top_builddir)
 	@mv -f $(rpmdir)/SRPMS/*.rpm $(abs_top_builddir)
 	@rm -rf $(rpmdir)
-	@rm -f v$(PACKAGE_VERSION).tar.gz
+	@rm -f zonefs-tools-$(PACKAGE_VERSION).tar.gz
 else
-
 rpm:
 	@echo "Building RPM packages requires rpmbuild and rpm utilities"
 	exit 1
-
 endif
