@@ -4,7 +4,11 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = src man tests/tools
+SUBDIRS = src man
+if BUILD_TESTS
+SUBDIRS += tests/tools
+endif
+
 EXTRA_DIST = autogen.sh README.md COPYING.GPL CONTRIBUTING
 
 if BUILD_RPM
