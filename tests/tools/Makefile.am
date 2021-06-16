@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2021 Western Digital Corporation or its affiliates.
 
-AM_CPPFLAGS = -O2 -Wall -Wextra -Wno-unused-parameter
+AM_CFLAGS = -O2 -Wall -Wextra -Wno-unused-parameter
 
 noinst_PROGRAMS = zio
 
