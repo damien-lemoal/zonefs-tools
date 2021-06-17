@@ -13,6 +13,7 @@ BuildRequires:	autoconf
 BuildRequires:	autoconf-archive
 BuildRequires:	automake
 BuildRequires:	libtool
+BuildRequires:	make
 BuildRequires:	gcc
 
 %description
@@ -38,5 +39,5 @@ sh autogen.sh
 %doc README.md CONTRIBUTING
 
 %changelog
-* Sat May 22 2021 Damien Le Moal <damien.lemoal@wdc.com> 1.5.1-1
+* Fri Jun 18 2021 Damien Le Moal <damien.lemoal@wdc.com> 1.5.1-1
 - Version 1.5.1 initial package
