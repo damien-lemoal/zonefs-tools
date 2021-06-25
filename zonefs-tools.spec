@@ -1,5 +1,5 @@
 Name:		zonefs-tools
-Version:	1.5.1
+Version:	1.5.2
 Release:	1%{?dist}
 Summary:	Provides user utilities for the zonefs file system
 
@@ -39,5 +39,5 @@ sh autogen.sh
 %doc README.md CONTRIBUTING
 
 %changelog
-* Fri Jun 18 2021 Damien Le Moal <damien.lemoal@wdc.com> 1.5.1-1
-- Version 1.5.1 initial package
+* Fri Jun 25 2021 Damien Le Moal <damien.lemoal@wdc.com> 1.5.2-1
+- Version 1.5.2 initial package
