@@ -12,9 +12,7 @@ if [ $# == 0 ]; then
         exit 0
 fi
 
-if [ "$nr_cnv_files" == 0 ]; then
-	exit_skip
-fi
+require_cnv_files
 
 echo "Check for UID 1000, GID 0, aggr_cnv"
 

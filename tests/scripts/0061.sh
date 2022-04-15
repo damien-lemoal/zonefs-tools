@@ -12,9 +12,7 @@ if [ $# == 0 ]; then
         exit 0
 fi
 
-if [ "$nr_cnv_files" == 0 ]; then
-	exit_skip
-fi
+require_cnv_files
 
 echo "Check for $(( zone_bytes * (nr_cnv_zones - 1) )) B file size"
 

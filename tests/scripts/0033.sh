@@ -12,9 +12,7 @@ if [ $# == 0 ]; then
         exit 0
 fi
 
-if [ "$nr_cnv_files" == 0 ]; then
-        exit_na
-fi
+require_cnv_files
 
 echo "Check for number of files: 1 aggr_cnv, $num_seq_files seq"
 

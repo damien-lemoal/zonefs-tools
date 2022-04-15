@@ -344,3 +344,8 @@ function require_program()
 {
 	type -p "$1" 2> /dev/null || exit_skip
 }
+
+function require_cnv_files()
+{
+	[[ ${nr_cnv_files} -ne 0 ]] || exit_skip
+}

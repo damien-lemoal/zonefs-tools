@@ -12,11 +12,8 @@ if [ $# == 0 ]; then
         exit 0
 fi
 
+require_cnv_files
 require_program fio
-
-if [ "$nr_cnv_files" == 0 ]; then
-	exit_skip
-fi
 
 echo "Check conventional file random write, direct IO"
 
