@@ -4,8 +4,12 @@
 
 AM_CFLAGS = -O2 -Wall -Wextra -Wno-unused-parameter
 
-noinst_PROGRAMS = zio
+noinst_PROGRAMS = zio zopen
 
 zio_SOURCES = zio.c
 zio_LDADD =
 zio_LDFLAGS =
+
+zopen_SOURCES = zopen.c
+zopen_LDADD =
+zopen_LDFLAGS =

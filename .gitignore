@@ -30,6 +30,7 @@
 *.hex
 src/mkzonefs
 tests/tools/zio
+tests/tools/zopen
 
 # Kernel compile files
 *.symvers
