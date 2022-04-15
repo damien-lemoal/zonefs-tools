@@ -7,6 +7,26 @@
 
 blkzone=$(type -p blkzone 2>/dev/null)
 
+function sysfs_max_active_seq_files()
+{
+	cat "/sys/fs/zonefs/$(basename $1)/max_active_seq_files"
+}
+
+function sysfs_nr_active_seq_files()
+{
+	cat "/sys/fs/zonefs/$(basename $1)/nr_active_seq_files"
+}
+
+function sysfs_max_wro_seq_files()
+{
+	cat "/sys/fs/zonefs/$(basename $1)/max_wro_seq_files"
+}
+
+function sysfs_nr_wro_seq_files()
+{
+	cat "/sys/fs/zonefs/$(basename $1)/nr_wro_seq_files"
+}
+
 function get_nr_zones()
 {
 	${blkzone} report "$1" | wc -l || exit 0
@@ -38,6 +58,17 @@ function get_max_open_zones()
 
 	if [ -f "/sys/class/block/$bdev/queue/max_open_zones" ]; then
 		cat "/sys/class/block/$bdev/queue/max_open_zones"
+	else
+		echo "0"
+	fi
+}
+
+function get_max_active_zones()
+{
+	local bdev="$(basename $1)"
+
+	if [ -f "/sys/class/block/$bdev/queue/max_active_zones" ]; then
+		cat "/sys/class/block/$bdev/queue/max_active_zones"
 	else
 		echo "0"
 	fi
@@ -348,4 +379,9 @@ function require_program()
 function require_cnv_files()
 {
 	[[ ${nr_cnv_files} -ne 0 ]] || exit_skip
+}
+
+function require_sysfs()
+{
+	[[ ${zonefs_has_sysfs} -eq 1 ]] || exit_skip
 }

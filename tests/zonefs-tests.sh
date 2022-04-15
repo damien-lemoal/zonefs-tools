@@ -175,6 +175,16 @@ export nr_seq_files
 export seq_file_0_zone_start_sector
 export seq_file_0_max_size=$(get_zone_capacity_bytes "$dev" $seq_file_0_zone_start_sector)
 
+# zonefs features
+modprobe zonefs
+if [ -d "/sys/fs/zonefs" ]; then
+	zonefs_has_sysfs=1
+else
+	zonefs_has_sysfs=0
+fi
+export zonefs_has_sysfs
+rmmod zonefs
+
 # Set IO scheduler
 echo deadline >"/sys/block/$bdev/queue/scheduler"
 
@@ -207,6 +217,7 @@ echo "zonefs-tests on $dev:"
 echo "  $nr_zones zones ($nr_cnv_zones conventional zones, $nr_seq_zones sequential zones)"
 echo "  $zone_sectors 512B sectors zone size ($(( zone_bytes / 1048576 )) MiB)"
 echo "  $(get_max_open_zones $dev) max open zones"
+echo "  $(get_max_active_zones $dev) max active zones"
 echo "Running tests"
 
 for t in "${tests[@]}"; do
