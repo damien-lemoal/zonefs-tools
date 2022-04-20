@@ -9,8 +9,11 @@
 zone_size=64
 zone_capacity=$zone_size
 
-# Use max open limit (default off)
+# Use max open limit (default: no limit)
 zone_max_open=0
+
+# Use max active limit (default: no limit)
+zone_max_active=0
 
 # Capacity (MB)
 capacity=4096
@@ -24,6 +27,7 @@ function usage() {
 	echo "    -h | --help   : Display help"
 	echo "    -c | --cap    : Test with zone capacity < zone size (default: off)"
 	echo "    -o | --moz    : Test with max open zone limit set (default: no limit)"
+	echo "    -a | --maz    : Test with max active zone limit set (default: no limit)"
 	echo "    -t <test num> : Test to execute. Can be specified multiple times."
 	echo "                    If used, only the first nullb config is used"
 	echo "    -n <nr conv>  : Specify the number of conventional zones to use."
@@ -46,6 +50,10 @@ while [[ $# -gt 0 ]]; do
                         ;;
 		"-o" | "--moz")
 			zone_max_open=$(( $capacity / $zone_size / 8 ))
+                        shift
+                        ;;
+		"-a" | "--maz")
+			zone_max_active=$(( $capacity / $zone_size / 8 + 1 ))
                         shift
                         ;;
 		"-h" | "--help")
@@ -121,6 +129,10 @@ function create_zoned_nullb()
 		echo "$zone_max_open" > "$dev"/zone_max_open
 	fi
 
+	if [ -f "$dev"/zone_max_active ]; then
+		echo "$zone_max_active" > "$dev"/zone_max_active
+	fi
+
 	echo 1 > "$dev"/power
 
 	echo "$n"
@@ -143,6 +155,7 @@ for c in ${nr_conv[@]}; do
 	echo "Run tests against device with $c conventional zones..."
 	echo "    Zone size: $zone_size MB, zone capacity: $zone_capacity MB"
 	echo "    $zone_max_open max open zones"
+	echo "    $zone_max_active max active zones"
 	echo ""
 	nulld=$(create_zoned_nullb $c)
 
