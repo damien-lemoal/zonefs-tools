@@ -181,14 +181,118 @@ uid=*int* | Set zone files user owner ID (default: 0)
 gid=*int* | Set zone files user group ID (default: 0)
 perm=*octal* | Set zone files access permisisons (default: 640)
 
+## Running tests
+
+zonefs tools also provide a test suite for testing the correct operation of
+zonefs with any zoned block device.
+
+To enable the compilation of tools used for tests, zonefs-tools must be compiled
+as follows.
+
+```
+> sh ./autogen.sh
+> ./configure --with-tests
+> make
+```
+
+Running the tests for a particular device is done as follows.
+
+```
+> cd tests
+> ./zonefs-tests.sh /dev/XXX
+```
+
+Where */dev/XXX* is the device file for the target zoned block device to test
+with. The script *zonefs-tests-nullblk.sh* is also available to test a
+particular kernel against a *nullblk* device.
+
+The *zonefs-tests.sh* script has several options that can be listed using the
+*-h* or *--help* options or by not specifying any argument.
+
+```
+> ./zonefs-tests.sh -h
+Usage: zonefs-tests.sh [Options] <Zoned device node file>
+Options:
+  -l             : List all tests
+  -g <file name> : Use file name for the test log file.
+                   default: <dev name>-zonefs-tests.log
+  -t <test num>  : Execute only the specified test case. Can be
+                   specified multiple times.
+  -s             : Short test (do not execute tests that take a
+                   long time)
+  -h, --help     : This help message
+```
+
+The lists of test cases executed can be listed with the *-l* option.
+
+```
+./zonefs-tests.sh -l
+  Test 0010: mkzonefs (options)
+  Test 0011: mkzonefs (force format)
+  Test 0012: mkzonefs (invalid device)
+  Test 0013: mkzonefs (super block zone state)
+  Test 0020: mount (default)
+  Test 0021: mount (invalid device)
+  Test 0022: mount (check mount directory sub-directories)
+  Test 0023: mount (options)
+  Test 0030: Number of files (default)
+  Test 0031: Number of files (aggr_cnv)
+  Test 0032: Number of files using stat (default)
+  Test 0033: Number of files using stat (aggr_cnv)
+  Test 0034: Number of blocks using stat (default)
+  Test 0035: Number of blocks using stat (aggr_cnv)
+  Test 0040: Files permissions (default)
+  Test 0041: Files permissions (aggr_cnv)
+  Test 0042: Files permissions (set value)
+  Test 0043: Files permissions (set value + aggr_cnv)
+  Test 0050: Files owner (default)
+  Test 0051: Files owner (aggr_cnv)
+  Test 0052: Files owner (set value)
+  Test 0053: Files owner (set value + aggr_cnv)
+  Test 0060: Files size (default)
+  Test 0061: Files size (aggr_cnv)
+  Test 0070: Conventional file truncate
+  Test 0071: Conventional file truncate (aggr_cnv)
+  Test 0072: Conventional file unlink
+  Test 0073: Conventional file unlink (aggr_cnv)
+  Test 0074: Conventional file random write
+  Test 0075: Conventional file random write (direct)
+  Test 0076: Conventional file random write (aggr_cnv)
+  Test 0077: Conventional file random write (aggr_cnv, direct)
+  Test 0078: Conventional file mmap read/write
+  Test 0079: Conventional file mmap read/write (aggr_cnv)
+  Test 0080: Sequential file truncate
+  Test 0081: Sequential file unlink
+  Test 0082: Sequential file buffered write IO
+  Test 0083: Sequential file overwrite
+  Test 0084: Sequential file unaligned write (sync IO)
+  Test 0085: Sequential file unaligned write (async IO)
+  Test 0086: Sequential file append (sync)
+  Test 0087: Sequential file append (async)
+  Test 0088: Sequential file random read
+  Test 0089: Sequential file mmap read/write
+  Test 0090: sequential file 4K synchronous write
+  Test 0091: Sequential file large synchronous write
+  Test 0092: Sequential file explicit-open zone resources
+  Test 0100: Swap file on conventional file
+  Test 0101: Swap file on sequential file
+  Test 0110: Sysfs attr after format
+  Test 0111: Sysfs seq files active after mount (open zones)
+  Test 0112: Sysfs seq files active after mount (active zones)
+  Test 0113: Sysfs seq files write-open (default)
+  Test 0114: Sysfs seq files write-open (explicit-open)
+  Test 0115: Sysfs seq files active after write (default)
+  Test 0116: Sysfs conv files write-open
+  Test 0117: Sysfs conv files active after write
+```
+
 ## Contributing
 
 Read the [CONTRIBUTING](CONTRIBUTING) file and send patches to:
 
-	Damien Le Moal <damien.lemoal@wdc.com>
+	Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
 If you believe your changes require kernel eyes or review, Cc the Linux kernel
 file system development mailing list:
 
 	linux-fsdevel@vger.kernel.org
-
