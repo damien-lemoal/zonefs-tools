@@ -23,19 +23,15 @@ function usage()
 {
 	echo "Usage: $(basename "$0") [Options] <Zoned device node file>"
 	echo "Options:"
-	echo "  -l: List all tests"
-	echo "  -g <file name>: Use file name for the test log file."
-	echo "                  default: <dev name>-zonefs-tests.log"
-	echo "  -t <test num>: Test to execute. Can be specified multiple times."
-	echo "  -s: Run short test"
-	echo "  -h || --help: This help message"
+	echo "  -l             : List all tests"
+	echo "  -g <file name> : Use file name for the test log file."
+	echo "                   default: <dev name>-zonefs-tests.log"
+	echo "  -t <test num>  : Execute only the specified test case. Can be"
+	echo "                   specified multiple times."
+	echo "  -s             : Short test (do not execute tests that take a"
+	echo "                   long time)"
+	echo "  -h, --help     : This help message"
 }
-
-# Check credentials
-if [ $(id -u) -ne 0 ]; then
-	echo "Root credentials are needed to run tests."
-	exit 1
-fi
 
 declare -a tests
 declare list=false
@@ -106,6 +102,12 @@ fi
 
 if [ ! -b "$dev" ]; then
 	echo "Invalid block device"
+	exit 1
+fi
+
+# Check credentials
+if [ $(id -u) -ne 0 ]; then
+	echo "Root credentials are needed to run tests."
 	exit 1
 fi
 
