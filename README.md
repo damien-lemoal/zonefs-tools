@@ -3,7 +3,7 @@ Copyright (C) 2019, Western Digital Corporation or its affiliates.
 # <p align="center">zonefs tools</p>
 
 This project provides the *mkzonefs* command line utility which allows
-formatting zoned block devices for use withe the *zonefs* file system.
+formatting zoned block devices for use with the *zonefs* file system.
 
 ## The *zonefs* File System
 
@@ -179,7 +179,7 @@ Feature       | Description
 aggr_cnv | Aggregate contiguous conventional zones as a single file (default: off)
 uid=*int* | Set zone files user owner ID (default: 0)
 gid=*int* | Set zone files user group ID (default: 0)
-perm=*octal* | Set zone files access permisisons (default: 640)
+perm=*octal* | Set zone files access permissions (default: 640)
 
 ## Running tests
 
