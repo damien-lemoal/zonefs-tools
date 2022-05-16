@@ -33,6 +33,29 @@ function usage()
 	echo "  -h, --help     : This help message"
 }
 
+# Check configuration
+[[ $(type -P "tools/zio") && $(type -P "tools/zopen") ]] ||
+	{
+		echo "Test tools not found."
+		echo "Run \"./configure --with-tests\" and recompile."
+		exit 1
+	}
+
+[[ $(type -P "fio") ]] ||
+	{
+		echo "fio not found."
+		echo "Installing fio is required to run tests."
+		exit 1
+	}
+
+[[ $(type -P "mkzonefs") ]] ||
+	{
+		echo "mkzonefs not found."
+		echo "Installing zonefs-tools is required to run tests."
+		exit 1
+	}
+
+# Parse command line
 declare -a tests
 declare list=false
 logfile=""
