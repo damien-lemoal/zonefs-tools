@@ -4,6 +4,10 @@
 #
 # Copyright (C) 2019 Western Digital Corporation or its affiliates.
 #
+
+# Run everything from the tests directory
+cd $(dirname "$0")
+
 . scripts/test_lib
 
 # trap ctrl-c interruptions
