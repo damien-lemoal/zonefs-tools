@@ -188,7 +188,11 @@ export zonefs_has_sysfs
 rmmod zonefs
 
 # Set IO scheduler
-echo deadline >"/sys/block/$bdev/queue/scheduler"
+echo mq-deadline > "/sys/block/$bdev/queue/scheduler"
+if [ $? != 0 ]; then
+	echo "Failed to set scheduler to mq-deadline"
+	exit 1
+fi
 
 run_test() {
 	local ret=0
