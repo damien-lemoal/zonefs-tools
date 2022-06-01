@@ -15,15 +15,30 @@ fi
 require_cnv_files
 require_program fio
 
-echo "Check conventional file random write, aggr_cnv, direct"
+echo "Check conventional file random write, aggr_cnv, direct (sync)"
 
 zonefs_mkfs "-o aggr_cnv $1"
 zonefs_mount "$1"
 
 fio --name=cnv_rndwr --filename="$zonefs_mntdir"/cnv/0 \
-    --rw=randwrite --ioengine=libaio --iodepth=8 --size="$(aggr_cnv_size)" \
+    --rw=randwrite --ioengine=psync --size="$(aggr_cnv_size)" \
     --bs=131072 --verify=md5 --do_verify=1 --overwrite=1 \
     --continue_on_error=none --direct=1 || \
     exit_failed " --> FAILED"
+
+zonefs_umount
+
+echo "Check conventional file random write, aggr_cnv, direct (async)"
+
+zonefs_mkfs "-o aggr_cnv $1"
+zonefs_mount "$1"
+
+fio --name=cnv_rndwr --filename="$zonefs_mntdir"/cnv/0 \
+    --rw=randwrite --ioengine=libaio --iodepth=64 --size="$(aggr_cnv_size)" \
+    --bs=131072 --verify=md5 --do_verify=1 --overwrite=1 \
+    --continue_on_error=none --direct=1 || \
+    exit_failed " --> FAILED"
+
+zonefs_umount
 
 exit 0
