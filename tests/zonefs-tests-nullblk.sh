@@ -28,6 +28,7 @@ function usage() {
 	echo "    -c | --cap    : Test with zone capacity < zone size (default: off)"
 	echo "    -o | --moz    : Test with max open zone limit set (default: no limit)"
 	echo "    -a | --maz    : Test with max active zone limit set (default: no limit)"
+	echo "    -b <sz B>     : Test with device block size set to <sz> bytes (default: 512 B)"
 	echo "    -t <test num> : Test to execute. Can be specified multiple times."
 	echo "                    If used, only the first nullb config is used"
 	echo "    -n <nr conv>  : Specify the number of conventional zones to use."
@@ -40,6 +41,7 @@ if [ $(id -u) -ne 0 ]; then
 fi
 
 testopts=""
+blocksize="512"
 
 # Check options
 while [[ $# -gt 0 ]]; do
@@ -60,6 +62,11 @@ while [[ $# -gt 0 ]]; do
 			usage "$0"
 			exit 0
                         ;;
+		"-b")
+			shift
+			blocksize="$1"
+			shift
+			;;
 		"-t")
 			shift
 			testopts+=" -t $1"
@@ -76,6 +83,11 @@ while [[ $# -gt 0 ]]; do
                         ;;
         esac
 done
+
+if [ $blocksize != 512 ] && [ $blocksize != 4096 ]; then
+	echo "Invalid block size"
+	exit 1
+fi
 
 # trap ctrl-c interruptions
 aborted=0
@@ -109,7 +121,7 @@ function create_zoned_nullb()
 		exit 1
 	fi
 
-	echo 4096 > "$dev"/blocksize
+	echo "$blocksize" > "$dev"/blocksize
 	echo 2 > "$dev"/queue_mode
 	echo 2 > "$dev"/irqmode
 	echo 5000 > "$dev"/completion_nsec
