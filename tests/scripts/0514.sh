@@ -18,9 +18,14 @@ zonefs_mkfs "$1"
 zonefs_mount "-o explicit-open $1"
 
 i=0
-maxopen=$(get_max_open_zones "$1")
+devmaxopen=$(get_max_open_zones "$1")
+devmaxactive=$(get_max_active_zones "$1")
+maxopen=${devmaxopen}
 if [ ${maxopen} -eq 0 ]; then
-	maxopen=4
+	maxopen=${devmaxactive}
+	if [ ${maxopen} -eq 0 ]; then
+		maxopen=4
+	fi
 fi
 
 echo "Check read open"
@@ -77,11 +82,13 @@ for((i=1; i<=${maxopen}; i++)); do
 		exit_failed "nr_wro_seq_files is ${nrwro} after close (should be 0)"
 done
 
-# Opening one more file than max-open should fail
-echo "Opening $(( maxopen + 1 )) files for writing (failure expected)"
-tools/zopen --nrfiles="$(( maxopen + 1 ))" \
-	--fflag=write "${zonefs_mntdir}/seq" && \
-	exit_failed "Write-opening $(( maxopen + 1 )) > ${maxopen} files succedded (should fail)"
+if [ ${devmaxopen} -ne 0 ]; then
+	# Opening one more file than max-open should fail
+	echo "Opening $(( maxopen + 1 )) files for writing (failure expected)"
+	tools/zopen --nrfiles="$(( maxopen + 1 ))" \
+		--fflag=write "${zonefs_mntdir}/seq" && \
+		exit_failed "Write-opening $(( maxopen + 1 )) > ${maxopen} files succedded (should fail)"
+fi
 
 sleep 1
 
