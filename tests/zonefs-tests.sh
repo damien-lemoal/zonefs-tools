@@ -62,6 +62,7 @@ function usage()
 # Parse command line
 declare -a tests
 declare list=false
+logdir="log"
 logfile=""
 export short=false
 
@@ -168,8 +169,11 @@ mkdir -p "$zonefs_mntdir"
 
 if [ "$logfile" == "" ]; then
 	logfile="$bdev-zonefs-tests.log"
-	rm -f "${logfile}"
 fi
+
+mkdir -p "$logdir"
+logfile="$logdir/$logfile"
+rm -f "$logfile"
 
 passed=0
 total=0
