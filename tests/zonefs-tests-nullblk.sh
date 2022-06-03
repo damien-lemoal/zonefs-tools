@@ -6,7 +6,7 @@
 #
 
 # Zone size in MB
-zone_size=64
+zone_size=32
 zone_capacity=$zone_size
 
 # Use max open limit (default: no limit)
@@ -15,11 +15,11 @@ zone_max_open=0
 # Use max active limit (default: no limit)
 zone_max_active=0
 
-# Capacity (MB)
-capacity=4096
+# Device total capacity (MB)
+capacity=2048
 
 # Default number of conventional zones to test
-nr_conv=(16 1 0)
+nr_conv=(10 1 0)
 
 function usage() {
 	echo "Usage: $0 [options]"
