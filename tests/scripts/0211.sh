@@ -20,7 +20,7 @@ echo "Check conventional file seq write, direct IO (sync)"
 zonefs_mkfs "$1"
 zonefs_mount "$1"
 
-fio --name=cnv_rndwr --filename="$zonefs_mntdir"/cnv/0 \
+fio --name=cnv_seqwr --filename="$zonefs_mntdir"/cnv/0 \
     --rw=write --ioengine=psync \
     --bs=131072 --verify=md5 --do_verify=1 --overwrite=1 \
     --continue_on_error=none --direct=1 || \
@@ -33,7 +33,7 @@ echo "Check conventional file seq write, direct IO (async)"
 zonefs_mkfs "$1"
 zonefs_mount "$1"
 
-fio --name=cnv_rndwr --filename="$zonefs_mntdir"/cnv/0 \
+fio --name=cnv_seqwr --filename="$zonefs_mntdir"/cnv/0 \
     --rw=write --ioengine=libaio --iodepth=64 \
     --bs=131072 --verify=md5 --do_verify=1 --overwrite=1 \
     --continue_on_error=none --direct=1 || \
