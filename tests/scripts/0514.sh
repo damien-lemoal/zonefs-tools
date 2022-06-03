@@ -52,6 +52,17 @@ done
 
 echo "Check write open"
 
+function exit_error()
+{
+	local zopid="$1"
+
+	# Close the files
+        kill ${zopid}
+        wait ${zopid}
+
+	exit_failed "$2"
+}
+
 # Check that any number of file can be write-open
 for((i=1; i<=${maxopen}; i++)); do
 	echo "Opening ${i} files for writing"
@@ -60,13 +71,15 @@ for((i=1; i<=${maxopen}; i++)); do
 	zopid=$!
 	sleep 1
 
-	nract=$(sysfs_nr_active_seq_files "$1")
-	[[ ${nract} -eq ${i} ]] || \
-		exit_failed "nr_active_seq_files is ${nract} (should be ${i})"
+	if [ ${devmaxopen} -ne 0 ]; then
+		nract=$(sysfs_nr_active_seq_files "$1")
+		[[ ${nract} -eq ${i} ]] || \
+			exit_error ${zopid} "nr_active_seq_files is ${nract} (should be ${i})"
+	fi
 
 	nrwro=$(sysfs_nr_wro_seq_files "$1")
 	[[ ${nrwro} -eq ${i} ]] || \
-		exit_failed "nr_wro_seq_files is ${nrwro} (should be ${i})"
+		exit_error ${zopid} "nr_wro_seq_files is ${nrwro} (should be ${i})"
 
 	# Close the files
 	kill ${zopid}
