@@ -8,16 +8,16 @@
 . scripts/test_lib
 
 if [ $# == 0 ]; then
-	echo "Sequential file random read"
+	echo "Sequential file random read (buffered)"
         exit 0
 fi
 
 require_program fio
 
-echo "Check sequential file random"
-
 zonefs_mkfs "$1"
 zonefs_mount "$1"
+
+echo "Fill sequential file"
 
 # Fill file
 fio --name=seqwrite --filename="$zonefs_mntdir"/seq/0 \
@@ -31,7 +31,26 @@ sz=$(file_size "$zonefs_mntdir"/seq/0)
 [ "$sz" != "$seq_file_0_max_size" ] && \
 	exit_failed " --> Invalid file size $sz B, expected $seq_file_0_max_size B"
 
-# Read
+zonefs_umount
+
+echo "Check sequential file random read (sync)"
+
+zonefs_mount "$1"
+
+# Sync buffered random read
+fio --name=seq_rndrd --filename="$zonefs_mntdir"/seq/0 \
+    --rw=randread --ioengine=psync --max-jobs=8 \
+    --bs=131072 --verify=md5 --do_verify=1 \
+    --continue_on_error=none || \
+	exit_failed "fio sync rand read FAILED"
+
+zonefs_umount
+
+zonefs_mount "$1"
+
+echo "Check sequential file random read (async)"
+
+# Async buffered random read
 fio --name=seq_rndrd --filename="$zonefs_mntdir"/seq/0 \
     --rw=randread --ioengine=libaio --iodepth=8 --max-jobs=8 \
     --bs=131072 --verify=md5 --do_verify=1 \
@@ -39,5 +58,6 @@ fio --name=seq_rndrd --filename="$zonefs_mntdir"/seq/0 \
 	exit_failed "fio async rand read FAILED"
 
 zonefs_umount
+
 
 exit 0
