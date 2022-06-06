@@ -26,9 +26,7 @@ maxact=$(get_max_active_zones "$1")
 if [ ${maxact} -eq 0 ]; then
 	maxact=4
 fi
-if [ ${maxact} -lt ${$nr_cnv_files} ]; then
-	maxact=${$nr_cnv_files}
-fi
+maxact=$(min ${maxact} ${nr_cnv_files})
 
 # Write 4K in maxact conv files
 for((i=0; i<${maxact}; i++)); do

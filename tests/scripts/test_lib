@@ -385,3 +385,19 @@ function require_sysfs()
 {
 	[[ ${zonefs_has_sysfs} -eq 1 ]] || exit_skip
 }
+
+function min()
+{
+	local a=$1
+	local b=$2
+
+	echo $((a < b ? a : b))
+}
+
+function max()
+{
+	local a=$1
+	local b=$2
+
+	echo $((a > b ? a : b))
+}
