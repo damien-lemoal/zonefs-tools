@@ -82,8 +82,8 @@ license.
 
 The following packages must be installed prior to compiling *mkzonefs*.
 
+* m4
 * autoconf
-* autoconf-archive
 * automake
 * libtool
 * libuuid library and its development headers (*libuuid* and *libuuid-devel*
