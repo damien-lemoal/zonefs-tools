@@ -164,7 +164,7 @@ if ! blkzone_has_zone_capacity "$dev"; then
         exit 1
 fi
 
-export zonefs_mntdir="$bdev-mnt"
+export zonefs_mntdir="${PWD}/$bdev-mnt"
 mkdir -p "$zonefs_mntdir"
 
 if [ "$logfile" == "" ]; then
