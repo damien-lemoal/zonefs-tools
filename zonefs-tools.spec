@@ -10,7 +10,6 @@ Source0:	%{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 BuildRequires:	libblkid-devel
 BuildRequires:	libuuid-devel
 BuildRequires:	autoconf
-BuildRequires:	autoconf-archive
 BuildRequires:	automake
 BuildRequires:	libtool
 BuildRequires:	make
