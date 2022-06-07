@@ -13,6 +13,7 @@ if [ $# == 0 ]; then
 fi
 
 require_cnv_files
+require_program dd
 
 echo "Check conventional file read beyond eof"
 
