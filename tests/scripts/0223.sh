@@ -12,6 +12,8 @@ if [ $# == 0 ]; then
         exit 0
 fi
 
+require_cnv_files
+
 echo "Check conventional file read beyond eof"
 
 zonefs_mkfs "$1"
