@@ -9,29 +9,28 @@
 zone_size=32
 zone_capacity=$zone_size
 
-# Use max open limit (default: no limit)
-zone_max_open=0
-
-# Use max active limit (default: no limit)
-zone_max_active=0
+# Max open and active limits
+declare -i zone_max_open=0
+declare -i zone_max_active=0
 
 # Device total capacity (MB)
 capacity=2048
 
+# Device block size
+blocksize="512"
+
 # Default number of conventional zones to test
-nr_conv=(10 1 0)
+nr_conv=10
 
 function usage() {
 	echo "Usage: $0 [options]"
 	echo "Options:"
-	echo "    -h | --help   : Display help"
-	echo "    -c | --cap    : Test with zone capacity < zone size (default: off)"
-	echo "    -o | --moz    : Test with max open zone limit set (default: no limit)"
-	echo "    -a | --maz    : Test with max active zone limit set (default: no limit)"
-	echo "    -b <sz B>     : Test with device block size set to <sz> bytes (default: 512 B)"
+	echo "    -h | --help          : Display help"
+	echo "    -c | --cap           : Test with zone capacity < zone size (default: off)"
+	echo "    -n | --nr_conv <n>   : Specify the number of conventional zones to use."
+	echo "    -s | --sectsz <sz B> : Test with device block size set to <sz> bytes (default: 512 B)"
 	echo "    -t <test num> : Test to execute. Can be specified multiple times."
 	echo "                    If used, only the first nullb config is used"
-	echo "    -n <nr conv>  : Specify the number of conventional zones to use."
 }
 
 # Check credentials
@@ -41,40 +40,31 @@ if [ $(id -u) -ne 0 ]; then
 fi
 
 testopts=""
-blocksize="512"
 
 # Check options
 while [[ $# -gt 0 ]]; do
         case "$1" in
-		"-c" | "--cap")
-			zone_capacity=$(( zone_size - 1 ))
-                        shift
-                        ;;
-		"-o" | "--moz")
-			zone_max_open=$(( $capacity / $zone_size / 8 ))
-                        shift
-                        ;;
-		"-a" | "--maz")
-			zone_max_active=$(( $capacity / $zone_size / 8 + 1 ))
-                        shift
-                        ;;
 		"-h" | "--help")
 			usage "$0"
 			exit 0
                         ;;
-		"-b")
+		"-c" | "--cap")
+			zone_capacity=$(( zone_size - 1 ))
+                        shift
+                        ;;
+		"-n" | "--nr_conv")
 			shift
-			blocksize="$1"
+			nr_conv=($1)
+			shift
+			;;
+		"-s" | "--sectsz")
+			shift
+			blocksize=($1)
 			shift
 			;;
 		"-t")
 			shift
 			testopts+=" -t $1"
-			shift
-			;;
-		"-n")
-			shift
-			nr_conv=($1)
 			shift
 			;;
                 *)
@@ -85,7 +75,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ $blocksize != 512 ] && [ $blocksize != 4096 ]; then
-	echo "Invalid block size"
+	echo "Invalid sector size"
 	exit 1
 fi
 
@@ -100,6 +90,32 @@ function ctrl_c() {
 scriptdir="$(cd "$(dirname "$0")" && pwd)"
 
 modprobe null_blk nr_devices=0
+
+function set_zone_res()
+{
+        case "$1" in
+		"0")
+			zone_max_open=0
+			zone_max_active=0
+                        ;;
+		"1")
+			zone_max_open=$(( $capacity / $zone_size / 8 ))
+			zone_max_active=0
+                        ;;
+		"2")
+			zone_max_open=0
+			zone_max_active=$(( $capacity / $zone_size / 8 + 1 ))
+                        ;;
+		"3")
+			zone_max_open=$(( $capacity / $zone_size / 8 ))
+			zone_max_active=$(( $capacity / $zone_size / 8 + 1 ))
+                        ;;
+                *)
+			echo "Invalid zone resource mode"
+			exit 1
+                        ;;
+        esac
+}
 
 # Create a zoned null_blk disk
 function create_zoned_nullb()
@@ -124,7 +140,7 @@ function create_zoned_nullb()
 	echo "$blocksize" > "$dev"/blocksize
 	echo 2 > "$dev"/queue_mode
 	echo 2 > "$dev"/irqmode
-	echo 5000 > "$dev"/completion_nsec
+	echo 2000 > "$dev"/completion_nsec
 
 	echo $capacity > "$dev"/size
 	echo 1024 > "$dev"/hw_queue_depth
@@ -135,7 +151,7 @@ function create_zoned_nullb()
 	if [ $zone_capacity != $zone_size ]; then
 		echo "$zone_capacity" > "$dev"/zone_capacity
 	fi
-	echo $1 > "$dev"/zone_nr_conv
+	echo "$nr_conv" > "$dev"/zone_nr_conv
 
 	if [ -f "$dev"/zone_max_open ]; then
 		echo "$zone_max_open" > "$dev"/zone_max_open
@@ -147,37 +163,45 @@ function create_zoned_nullb()
 
 	echo 1 > "$dev"/power
 
-	echo "$n"
+	echo "nullb$n"
 }
 
 function destroy_zoned_nullb()
 {
-        local n=$1
+        local ndev="$1"
 
-	echo 0 > /sys/kernel/config/nullb/nullb$n/power
-	rmdir /sys/kernel/config/nullb/nullb$n
+	echo 0 > /sys/kernel/config/nullb/$ndev/power
+	rmdir /sys/kernel/config/nullb/$ndev
 }
 
 declare -i rc=0
 
-# Run all drive configurations (3 by default)
-for c in ${nr_conv[@]}; do
+# Run all open/active configurations (3 by default)
+for (( m=0; m<=3; m++ )); do
+
+	set_zone_res "$m"
+	ndev=$(create_zoned_nullb)
+	moz=$(cat /sys/block/"$ndev"/queue/max_open_zones)
+	maz=$(cat /sys/block/"$ndev"/queue/max_active_zones)
+	nrz=$(blkzone report "/dev/$ndev" | wc -l)
+	nrc=$(blkzone report "/dev/$ndev" | grep -c CONVENTIONAL)
 
 	echo ""
-	echo "Run tests against device with $c conventional zones..."
+	echo "Run tests against /dev/$ndev..."
 	echo "    Zone size: $zone_size MB, zone capacity: $zone_capacity MB"
-	echo "    $zone_max_open max open zones"
-	echo "    $zone_max_active max active zones"
+	echo "    $nrz zones, $nrc conventional zones"
+	echo "    $moz max open zones ($zone_max_open)"
+	echo "    $maz max active zones ($zone_max_active)"
 	echo ""
-	nulld=$(create_zoned_nullb $c)
 
-	logfile="nullb${nulld}-cnv${c}-zonefs-tests.log"
+	logfile="${ndev}-moz${zone_max_open}-maz${zone_max_active}-zonefs-tests.log"
 
-	if ! ./zonefs-tests.sh ${testopts} "-g" "$logfile" "/dev/nullb$nulld"; then
+	if ! ./zonefs-tests.sh ${testopts} "-g" "$logfile" "/dev/$ndev"; then
 		rc=1
 	fi
 
-	destroy_zoned_nullb "$nulld"
+	sleep 1
+	destroy_zoned_nullb "$ndev"
 
 	if [ "$aborted" == 1 ] || [ "$testopts" != "" ]; then
 		break
