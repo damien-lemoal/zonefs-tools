@@ -10,10 +10,12 @@
 generate_fio() {
 	local nseq="$1"
 
-	filename="$zonefs_mntdir/seq/0"
-	for (( i=1; i<$nseq; i++ )); do
+	filename=""
+	sep=""
+	for (( i=0; i<$nseq; i++ )); do
 		truncate -s 0 "$zonefs_mntdir/seq/$i"
-		filename="$filename:$zonefs_mntdir/seq/$i"
+		filename="${filename}${sep}$zonefs_mntdir/seq/$i"
+		sep=":"
 	done
 
 	filesize=$(file_max_size "$zonefs_mntdir"/seq/0)
@@ -21,7 +23,7 @@ generate_fio() {
 		filesize=$((zone_sectors * 512 / 64))
 	fi
 
-	cat > 0092.fio << EOF
+	cat > 0312.fio << EOF
 [global]
 create_on_open=0
 allow_file_create=0
@@ -34,13 +36,13 @@ filesize=${filesize}
 continue_on_error=none
 direct=1
 
-[less-than-MOZ]
+[writefiles]
 filename=$filename
 EOF
 }
 
 function cleanup {
-	rm -f 0092.fio > /dev/null 2>&1
+	rm -f 0312.fio > /dev/null 2>&1
 }
 trap cleanup EXIT
 
@@ -62,21 +64,22 @@ zonefs_mkfs "$1"
 zonefs_mount "-o explicit-open $1"
 
 # fio write with less than $max_open_zones must succeed
-echo "Check write in less than max open zones files"
-if [ $max_open_zones -gt 1 ]; then
-	generate_fio $(( $max_open_zones - 1 ))
-	fio 0092.fio || exit_failed "fio write failed"
+echo "Check write in less than $max_open_zones max open files"
+if [ "$max_open_zones" -gt "1" ]; then
+	generate_fio "$(( max_open_zones - 1 ))"
+	fio 0312.fio || exit_failed "fio write failed"
 fi
 
 # fio write with $max_open_zones must succeed
-echo "Check write in exactly max open zones files"
-generate_fio $max_open_zones
-fio 0092.fio || exit_failed "fio write failed"
+echo "Check write in exactly $max_open_zones max open files"
+generate_fio "$max_open_zones"
+fio 0312.fio || exit_failed "fio write failed"
 
 # fio write with 2 * $max_open_zones must fail
-echo "Check write in double max open zones files"
-generate_fio $(( $max_open_zones * 2 ))
-fio 0092.fio && exit_failed "fio write succeeded (should fail)"
+echo "Check write in double $max_open_zones max open files"
+nrfiles=$(min $(( max_open_zones * 2 )) $nr_seq_files)
+generate_fio "$nrfiles"
+fio 0312.fio && exit_failed "fio write succeeded (should fail)"
 
 zonefs_umount
 
