@@ -7,24 +7,29 @@
 
 blkzone=$(type -p blkzone 2>/dev/null)
 
+function devname()
+{
+	basename "$(realpath $1)"
+}
+
 function sysfs_max_active_seq_files()
 {
-	cat "/sys/fs/zonefs/$(basename $1)/max_active_seq_files"
+	cat "/sys/fs/zonefs/$(devname $1)/max_active_seq_files"
 }
 
 function sysfs_nr_active_seq_files()
 {
-	cat "/sys/fs/zonefs/$(basename $1)/nr_active_seq_files"
+	cat "/sys/fs/zonefs/$(devname $1)/nr_active_seq_files"
 }
 
 function sysfs_max_wro_seq_files()
 {
-	cat "/sys/fs/zonefs/$(basename $1)/max_wro_seq_files"
+	cat "/sys/fs/zonefs/$(devname $1)/max_wro_seq_files"
 }
 
 function sysfs_nr_wro_seq_files()
 {
-	cat "/sys/fs/zonefs/$(basename $1)/nr_wro_seq_files"
+	cat "/sys/fs/zonefs/$(devname $1)/nr_wro_seq_files"
 }
 
 function get_nr_zones()
@@ -44,17 +49,17 @@ function get_nr_seq_zones()
 
 function get_zone_sectors()
 {
-	cat "/sys/class/block/$(basename $1)/queue/chunk_sectors"
+	cat "/sys/class/block/$(devname $1)/queue/chunk_sectors"
 }
 
 function get_zone_append_max_bytes()
 {
-	cat "/sys/class/block/$(basename $1)/queue/zone_append_max_bytes"
+	cat "/sys/class/block/$(devname $1)/queue/zone_append_max_bytes"
 }
 
 function get_max_open_zones()
 {
-	local bdev="$(basename $1)"
+	local bdev="$(devname $1)"
 
 	if [ -f "/sys/class/block/$bdev/queue/max_open_zones" ]; then
 		cat "/sys/class/block/$bdev/queue/max_open_zones"
@@ -65,7 +70,7 @@ function get_max_open_zones()
 
 function get_max_active_zones()
 {
-	local bdev="$(basename $1)"
+	local bdev="$(devname $1)"
 
 	if [ -f "/sys/class/block/$bdev/queue/max_active_zones" ]; then
 		cat "/sys/class/block/$bdev/queue/max_active_zones"
