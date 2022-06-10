@@ -207,7 +207,9 @@ function check_perm()
 		done <<< "$list"
 	fi
 
-	list=$(stat -c "%n %a" "$zonefs_mntdir"/seq/[0-9]*)
+	pushd "$zonefs_mntdir" > /dev/null 2>&1 || exit
+	list=$(stat -c "%n %a" seq/[0-9]*)
+	popd > /dev/null 2>&1 || exit
 	while read -r line; do
 
 		fp=(${line})
@@ -245,7 +247,9 @@ function check_uid_gid()
 		done <<< "$list"
 	fi
 
-	list=$(stat -c "%n %u %g" "$zonefs_mntdir"/seq/[0-9]*)
+	pushd "$zonefs_mntdir" > /dev/null 2>&1 || exit
+	list=$(stat -c "%n %u %g" seq/[0-9]*)
+	popd > /dev/null 2>&1 || exit
 	while read -r line; do
 
 		fug=(${line})
@@ -316,7 +320,9 @@ function check_size()
 		done <<< "$list"
 	fi
 
-	list=$(stat -c "%n %s" "$zonefs_mntdir"/seq/[0-9]*)
+	pushd "$zonefs_mntdir" > /dev/null 2>&1 || exit
+	list=$(stat -c "%n %s" seq/[0-9]*)
+	popd > /dev/null 2>&1 || exit
 	while read -r line; do
 
 		fsz=(${line})
