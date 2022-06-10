@@ -18,7 +18,7 @@ require_program dd
 zonefs_mkfs "-o aggr_cnv $1"
 zonefs_mount "$1"
 
-fsz=$(file_size "$zonefs_mntdir"/cnv/0)
+fsz=$(aggr_cnv_size)
 bs=$(( 16 * 1024 * 1024 ))
 if [ $bs -gt $fsz ]; then
 	bs="$fsz"
