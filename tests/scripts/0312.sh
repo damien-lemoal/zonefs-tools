@@ -10,14 +10,6 @@
 generate_fio() {
 	local nseq="$1"
 
-	filename=""
-	sep=""
-	for (( i=0; i<$nseq; i++ )); do
-		truncate -s 0 "$zonefs_mntdir/seq/$i"
-		filename="${filename}${sep}$zonefs_mntdir/seq/$i"
-		sep=":"
-	done
-
 	filesize=$(file_max_size "$zonefs_mntdir"/seq/0)
 	if $short; then
 		filesize=$((zone_sectors * 512 / 64))
@@ -37,8 +29,12 @@ continue_on_error=none
 direct=1
 
 [writefiles]
-filename=$filename
 EOF
+
+	for (( i=0; i<$nseq; i++ )); do
+		truncate -s 0 "$zonefs_mntdir/seq/$i"
+		echo "filename=$zonefs_mntdir/seq/$i" >> 0312.fio
+	done
 }
 
 function cleanup {
