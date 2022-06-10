@@ -24,9 +24,6 @@ if [ $bs -gt $fsz ]; then
 	bs="$fsz"
 fi
 count=$(( fsz / bs ))
-if [ $(( count * bs )) -ne $fsz ]; then
-	count=$(( count + 1 ))
-fi
 
 echo "Check conventional file seq write (aggr_cnv, large IOs, buffered)"
 echo "bs: $bs, count: $count, fsz: $fsz"
