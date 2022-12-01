@@ -8,7 +8,7 @@
 . scripts/test_lib
 
 if [ $# == 0 ]; then
-	echo "Files permissions (set value)"
+	echo "Files permissions (format set value)"
         exit 0
 fi
 

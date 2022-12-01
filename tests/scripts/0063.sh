@@ -8,7 +8,7 @@
 . scripts/test_lib
 
 if [ $# == 0 ]; then
-	echo "Files permissions (set value + aggr_cnv)"
+	echo "Files permissions (format set value + aggr_cnv)"
         exit 0
 fi
 
