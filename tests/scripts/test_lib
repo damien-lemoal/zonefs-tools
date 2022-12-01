@@ -243,6 +243,20 @@ function check_perm()
 	done <<< "$list"
 }
 
+function get_uid_gid()
+{
+	stat -c "%u %g" "$1"
+}
+
+function check_file_uid_gid()
+{
+	ug="$(get_uid_gid "$1")"
+	if [ "$ug" != "$2" ]; then
+		echo "file $1: invalid UID/GID $ug (expected $2)"
+		exit 1
+	fi
+}
+
 function check_uid_gid()
 {
 	if [ -d "$zonefs_mntdir/cnv/" ]; then
