@@ -24,11 +24,25 @@ if [ "$nr_cnv_files" != 0 ]; then
 		echo " --> Expected $nr_cnv_files, got $nr_files"
 		exit 1
 	fi
+
+	nr_files=$(file_size "$zonefs_mntdir/cnv/")
+	if [ "$nr_files" != "$nr_cnv_files" ]; then
+		echo " --> Invalid cnv directory size:"
+		echo " --> Expected $nr_cnv_files, got $nr_files"
+		exit 1
+	fi
 fi
 
 nr_files=$(ls "$zonefs_mntdir/seq/" | wc -l)
 if [ "$nr_files" != "$nr_seq_files" ]; then
 	echo " --> Invalid number of sequential zones file:"
+	echo " --> Expected $nr_seq_files, got $nr_files"
+	exit 1
+fi
+
+nr_files=$(file_size "$zonefs_mntdir/seq/")
+if [ "$nr_files" != "$nr_seq_files" ]; then
+	echo " --> Invalid seq directory size:"
 	echo " --> Expected $nr_seq_files, got $nr_files"
 	exit 1
 fi
