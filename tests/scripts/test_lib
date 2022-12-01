@@ -7,6 +7,11 @@
 
 blkzone=$(type -p blkzone 2>/dev/null)
 
+function drop_inode_cache()
+{
+	echo 2 > /proc/sys/vm/drop_caches
+}
+
 function devname()
 {
 	basename "$(realpath $1)"
@@ -187,6 +192,20 @@ function zonefs_umount()
 
 	umount "$zonefs_mntdir" || \
 		exit_failed " --> umount FAILED"
+}
+
+function get_perm()
+{
+	stat -c "%a" "$1"
+}
+
+function check_file_perm()
+{
+	perm="$(get_perm "$1")"
+        if [ "$perm" != "$2" ]; then
+		echo "file $1: invalid permission $perm (expected $2)"
+		exit 1
+        fi
 }
 
 function check_perm()
