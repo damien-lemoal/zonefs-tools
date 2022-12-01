@@ -8,7 +8,7 @@
 . scripts/test_lib
 
 if [ $# == 0 ]; then
-	echo "Files owner (set value)"
+	echo "Files owner (format set value)"
         exit 0
 fi
 

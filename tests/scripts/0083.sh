@@ -8,7 +8,7 @@
 . scripts/test_lib
 
 if [ $# == 0 ]; then
-	echo "Files owner (set value + aggr_cnv)"
+	echo "Files owner (format set value + aggr_cnv)"
         exit 0
 fi
 
