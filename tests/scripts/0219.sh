@@ -33,7 +33,7 @@ zonefs_mkfs "-o aggr_cnv $1"
 zonefs_mount "$1"
 
 fio --name=cnv_seqrd --filename="$zonefs_mntdir"/cnv/0 \
-    --rw=write --ioengine=libaio --iodepth=64 --size="$(aggr_cnv_size)" \
+    --rw=read --ioengine=libaio --iodepth=64 --size="$(aggr_cnv_size)" \
     --bs=131072 --continue_on_error=none --direct=1 || \
     exit_failed " --> FAILED"
 
