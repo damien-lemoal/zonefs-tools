@@ -18,7 +18,7 @@ zonefs_mkfs "$1"
 zonefs_mount "$1"
 
 # Check with O_APPEND file open
-echo "Check append writes with O_APPEND"
+echo "Check sync append writes with O_APPEND"
 
 dd if=/dev/zero of="$zonefs_mntdir"/seq/0 oflag=direct bs=4096 count=1 || \
 	exit_failed " --> FAILED"
@@ -36,7 +36,7 @@ sz=$(file_size "$zonefs_mntdir"/seq/0)
 	exit_failed " --> Invalid file size $sz B, expected $seq_file_0_max_size B"
 
 # Test with RWF_APPEND I/O flag
-echo "Check append writes with RWF_APPEND"
+echo "Check sync append writes with RWF_APPEND"
 
 truncate --no-create --size=0 "$zonefs_mntdir"/seq/0 || \
         exit_failed " --> FAILED"
@@ -45,7 +45,7 @@ dd if=/dev/zero of="$zonefs_mntdir"/seq/0 oflag=direct bs=4096 count=1 || \
 	exit_failed " --> FAILED"
 
 tools/zio --write --fflag=direct --ioflag=append \
-	--size=135168 --async=8 "$zonefs_mntdir"/seq/0 || \
+	--size=135168 "$zonefs_mntdir"/seq/0 || \
 	exit_failed " --> FAILED"
 
 sz=$(file_size "$zonefs_mntdir"/seq/0)
