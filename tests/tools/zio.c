@@ -431,12 +431,14 @@ static void zio_usage(char *cmd)
 	       "                        - append\n"
 	       "                        - ndelay\n"
 	       "                        - sync\n"
+	       "                        - dsync\n"
 	       "                        - trunc\n"
 	       "                      This option can be used multiple times.\n"
 	       "    --ioflag=<flag> : Use RWF_<flag> for IOs. <flag> can be:\n"
 	       "                        - nowait\n"
 	       "                        - hipri\n"
 	       "                        - append\n"
+	       "                        - dsync\n"
 	       "                      This option can be used multiple times.\n");
 }
 
@@ -518,6 +520,8 @@ int main(int argc, char **argv)
 				zio.fflags |= O_NDELAY;
 			} else if (strcmp(argv[i] + 8, "sync") == 0) {
 				zio.fflags |= O_SYNC;
+			} else if (strcmp(argv[i] + 8, "dsync") == 0) {
+				zio.fflags |= O_DSYNC;
 			} else if (strcmp(argv[i] + 8, "trunc") == 0) {
 				zio.fflags |= O_TRUNC;
 			} else {
@@ -531,6 +535,8 @@ int main(int argc, char **argv)
 				zio.ioflags |= RWF_NOWAIT;
 			} else if (strcmp(argv[i] + 9, "hipri") == 0) {
 				zio.ioflags |= RWF_HIPRI;
+			} else if (strcmp(argv[i] + 9, "dsync") == 0) {
+				zio.ioflags |= RWF_DSYNC;
 			} else {
 				fprintf(stderr, "Invalid IO flag\n");
 				return 1;
