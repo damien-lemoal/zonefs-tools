@@ -19,28 +19,28 @@ echo "Check for number of files: 1 cnv, $nr_seq_files seq"
 zonefs_mkfs "-o aggr_cnv $1"
 zonefs_mount "$1"
 
-nr_files=$(ls "$zonefs_mntdir/cnv/" | wc -l)
+nr_files=$(ls_nr_files "$zonefs_mntdir/cnv/")
 if [ "$nr_files" != 1 ]; then
 	echo " --> Invalid number of conventional zones file:"
 	echo " --> Expected 1, got $nr_files"
 	exit 1
 fi
 
-nr_files=$(file_size "$zonefs_mntdir/cnv/")
+nr_files=$(file_size "$zonefs_mntdir/cnv")
 if [ "$nr_files" != 1 ]; then
 	echo " --> Invalid cnv directory size:"
 	echo " --> Expected 1, got $nr_files"
 	exit 1
 fi
 
-nr_files=$(ls "$zonefs_mntdir/seq/" | wc -l)
+nr_files=$(ls_nr_files "$zonefs_mntdir/seq/")
 if [ "$nr_files" != "$nr_seq_files" ]; then
 	echo " --> Invalid number of sequential zones file:"
 	echo " --> Expected $nr_seq_files, got $nr_files"
 	exit 1
 fi
 
-nr_files=$(file_size "$zonefs_mntdir/seq/")
+nr_files=$(file_size "$zonefs_mntdir/seq")
 if [ "$nr_files" !=  "$nr_seq_files" ]; then
 	echo " --> Invalid seq directory size:"
 	echo " --> Expected $nr_seq_files, got $nr_files"

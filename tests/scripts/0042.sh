@@ -17,8 +17,6 @@ echo "Check for number of files: $nr_cnv_files cnv, $nr_seq_files seq"
 zonefs_mkfs "$1"
 zonefs_mount "$1"
 
-nr_files=$(file_number "$zonefs_mntdir")
-
 nr_s_files=$nr_seq_files
 if [ "$nr_seq_files" != 0 ]; then
 	nr_s_files=$(( nr_s_files + 1 ))
@@ -31,6 +29,7 @@ fi
 
 nr_expected_files=$(( nr_s_files + nr_c_files ))
 
+nr_files=$(stat_nr_files "$zonefs_mntdir")
 if [ "$nr_files" != "$nr_expected_files" ]; then
         echo " --> Invalid total number of zone files:"
         echo " --> Expected $nr_expected_files, got $nr_files"

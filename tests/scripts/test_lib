@@ -400,7 +400,12 @@ function destroy_nullb()
 	rmmod null_blk >> /dev/null 2>&1
 }
 
-function file_number()
+function ls_nr_files()
+{
+	ls -U "$1" | wc -l || exit_failed " --> ls FAILED"
+}
+
+function stat_nr_files()
 {
         stat -f -c "%c" "$1"
 }
