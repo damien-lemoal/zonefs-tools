@@ -53,7 +53,7 @@ echo "Check explicit-open mounts"
 
 max_open_zones=$(get_max_open_zones "$1")
 if [ "$max_open_zones" == 0 ]; then
-	exit_skip
+	exit_skip "No maximum open zone limit"
 fi
 
 zonefs_mkfs "$1"

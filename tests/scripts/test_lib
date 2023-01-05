@@ -131,6 +131,7 @@ function get_total_zone_capacity_sectors()
 
 function exit_skip()
 {
+	echo " --> skipped: $1"
 	exit 2
 }
 
@@ -468,17 +469,17 @@ function block_size()
 
 function require_program()
 {
-	type -p "$1" 2> /dev/null || exit_skip
+	type -p "$1" 2> /dev/null || exit_skip "program $1 not available"
 }
 
 function require_cnv_files()
 {
-	[[ ${nr_cnv_files} -ne 0 ]] || exit_skip
+	[[ ${nr_cnv_files} -ne 0 ]] || exit_skip "no conventional files"
 }
 
 function require_sysfs()
 {
-	[[ ${zonefs_has_sysfs} -eq 1 ]] || exit_skip
+	[[ ${zonefs_has_sysfs} -eq 1 ]] || exit_skip "sysfs attributes not supported"
 }
 
 function min()

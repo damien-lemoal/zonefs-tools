@@ -12,10 +12,7 @@ if [ $# == 0 ]; then
         exit 0
 fi
 
-if [ "$nr_cnv_files" == 0 ]; then
-	exit_skip
-fi
-
+require_cnv_files
 require_sysfs
 
 zonefs_mkfs "$1"
