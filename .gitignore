@@ -29,7 +29,7 @@
 *.x86_64
 *.hex
 src/mkzonefs
-tests/log
+tests/log*
 tests/tools/zio
 tests/tools/zopen
 

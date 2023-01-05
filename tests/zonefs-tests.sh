@@ -14,13 +14,13 @@ cd $(dirname "$0")
 aborted=0
 trap ctrl_c INT
 
-function ctrl_c() {
-	aborted=1
-}
-
 function test_num()
 {
-	basename "$1" | cut -d "." -f1
+	basename "$1" .sh
+}
+
+function ctrl_c() {
+	aborted=1
 }
 
 function usage()
@@ -28,8 +28,8 @@ function usage()
 	echo "Usage: $(basename "$0") [Options] <Zoned device node file>"
 	echo "Options:"
 	echo "  -l             : List all tests"
-	echo "  -g <file name> : Use file name for the test log file."
-	echo "                   default: <dev name>-zonefs-tests.log"
+	echo "  -g <directory> : Use this directory to save log files."
+	echo "                   default: logs/<dev name>"
 	echo "  -t <test num>  : Execute only the specified test case. Can be"
 	echo "                   specified multiple times."
 	echo "  -s             : Short test (do not execute tests that take a"
@@ -62,8 +62,7 @@ function usage()
 # Parse command line
 declare -a tests
 declare list=false
-logdir="log"
-logfile=""
+logdir=""
 export short=false
 
 while [ "${1#-}" != "$1" ]; do
@@ -88,7 +87,7 @@ while [ "${1#-}" != "$1" ]; do
 		;;
 	-g)
 		shift
-		logfile="$1"
+		logdir="$1"
 		shift
 		;;
 	-s)
@@ -167,13 +166,14 @@ fi
 export zonefs_mntdir="${PWD}/$bdev-mnt"
 mkdir -p "$zonefs_mntdir"
 
-if [ "$logfile" == "" ]; then
-	logfile="$bdev-zonefs-tests.log"
+if [ "$logdir" == "" ]; then
+	logdir="logs/${bdev}"
 fi
 
-mkdir -p "$logdir"
-logfile="$logdir/$logfile"
-rm -f "$logfile"
+mkdir -p "$logdir" || \
+	exit_failed "Create log directory ${logdir} failed"
+rm -rf "${logdir}/*" > /dev/null 2>&1
+export logdir
 
 passed=0
 total=0
@@ -219,21 +219,39 @@ export zonefs_has_sysfs
 rmmod zonefs
 
 # Set IO scheduler
-echo mq-deadline > "/sys/block/$bdev/queue/scheduler"
-if [ $? != 0 ]; then
-	echo "Failed to set scheduler to mq-deadline"
-	exit 1
-fi
+echo mq-deadline > "/sys/block/$bdev/queue/scheduler" || \
+	exit_failed "Failed to set scheduler to mq-deadline"
 
-run_test() {
+function kmsg_log()
+{
+	if [ -e /dev/kmsg ]; then
+		echo "$1" > /dev/kmsg
+	fi
+}
+
+function kmsg_log_start()
+{
+	kmsg_log "#### zonefs-test case $1 start ####"
+}
+
+function kmsg_log_end()
+{
+	kmsg_log "#### zonefs-test case $1 end ####"
+}
+
+function run_test()
+{
+	local tnum="$(test_num $1)"
 	local ret=0
+
+	kmsg_log_start ${tnum}
 
 	modprobe zonefs || (echo "FAILED (modprobe)"; return 1)
 
-	echo "## Test $1 ($( $1 ))"
+	echo "## Test ${tnum}: $( $1 )"
 	echo ""
 
-	"$1" "$2" >> ${logfile} 2>&1
+	"$1" "$2"
 	ret=$?
 	if [ "$ret" == 0 ]; then
 		echo "PASS"
@@ -247,6 +265,8 @@ run_test() {
 	umount "$zonefs_mntdir" >> /dev/null 2>&1
 	rmmod zonefs || if [ $ret == 0 ]; then echo "FAILED (rmmod)"; ret=1; fi
 
+	kmsg_log_end ${tnum}
+
 	return $ret
 }
 
@@ -258,10 +278,12 @@ echo "  $(get_max_active_zones $dev) max active zones"
 echo "Running tests"
 
 for t in "${tests[@]}"; do
-	echo -n "  Test $(test_num "$t"):  "
+	tnum="$(test_num $t)"
+
+	echo -n "  Test ${tnum}:  "
 	printf "%-52s ... " "$( $t )"
 
-	run_test "$t" "$1" >> ${logfile} 2>&1
+	run_test "$t" "$1" > "${logdir}/${tnum}.log" 2>&1
 	ret=$?
 	if [ "$ret" == 0 ]; then
 		status="\e[92mPASS\e[0m"
