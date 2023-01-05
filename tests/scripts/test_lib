@@ -208,6 +208,52 @@ function check_file_perm()
         fi
 }
 
+function get_ino()
+{
+	stat -c "%i" "$1" || \
+		exit_failed " --> Failed to get inode number of file $1"
+}
+
+function check_dir_ino()
+{
+	local dir="$1"
+	local expected_ino=$2
+	local ino
+
+	ino=$(get_ino "${dir}")
+	if [ ${ino} != ${expected_ino} ]; then
+		echo " --> Invalid inode number for directory ${dir}"
+		echo " --> Expected ${expected_ino}, got ${ino}"
+		exit 1
+	fi
+}
+
+function check_files_ino()
+{
+	local dir="$1"
+	local nrfiles=$2
+	local expected_ino=$3
+	local ino
+	local f
+
+	#
+	# Note: this needs to be improved as this assumes that files under
+	# a zone type directory are all from contiguous zones. This may not
+	# be the case for all devices as conventional zones can be anywhere.
+	# In practice, this is not an issue though.
+	#
+	for (( f=0; f<${nrfiles}; f++ )); do
+		ino=$(get_ino "${dir}/$f")
+		if [ ${ino} != ${expected_ino} ]; then
+			echo " --> Invalid inode number for file ${dir}/$f"
+			echo " --> Expected ${expected_ino}, got ${ino}"
+			exit 1
+		fi
+
+		expected_ino=$(( expected_ino + 1 ))
+	done
+}
+
 function check_perm()
 {
 	if [ -d "$zonefs_mntdir/cnv/" ]; then
