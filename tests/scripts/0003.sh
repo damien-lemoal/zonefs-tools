@@ -18,10 +18,11 @@ echo "# Trying /dev/console"
 mkzonefs /dev/console && exit_failed " --> SUCCESS (should FAIL)"
 
 # Regular block device
-nulldev=$(create_nullb)
+nulldev=$(create_regular_nullb)
 echo "# Trying regular block device /dev/nullb$nulldev"
 
 mkzonefs "/dev/nullb$nulldev" && exit_failed " --> SUCCESS (should FAIL)"
+
 destroy_nullb $nulldev
 
 exit 0

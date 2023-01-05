@@ -138,6 +138,11 @@ function exit_skip()
 function exit_failed()
 {
 	echo "$1"
+
+	if [ ! -z "${zonefs_test_nullbn}" ]; then
+		destroy_nullb "${zonefs_test_nullbn}"
+	fi
+
 	exit 1
 }
 
@@ -419,6 +424,7 @@ function check_size()
 
 function create_nullb()
 {
+	local zoned=$1
 	local n=0
 
 	modprobe null_blk nr_devices=0
@@ -430,21 +436,55 @@ function create_nullb()
 		n=$(( n + 1 ))
 	done
 
-	mkdir /sys/kernel/config/nullb/nullb$n
-	echo 0 > /sys/kernel/config/nullb/nullb$n/zoned
-	echo 1 > /sys/kernel/config/nullb/nullb$n/power
+	cfg="/sys/kernel/config/nullb/nullb$n"
+	mkdir "$cfg" || exit_failed "Create test null_blk device failed"
+
+	echo 1 > "${cfg}/zoned"
+	echo 2 > "${cfg}/queue_mode"
+	echo 2 > "${cfg}/irqmode"
+	echo 2000 > "${cfg}/completion_nsec"
+
+	echo 2048 > "${cfg}/size"
+	echo 1024 > "${cfg}/hw_queue_depth"
+	echo 1 > "${cfg}/memory_backed"
+
+	echo ${zoned} > "${cfg}/zoned"
+	if [ "${zoned}" == "1" ]; then
+		echo 32 > "${cfg}/zone_size"
+		echo 10 > "${cfg}/zone_nr_conv"
+		echo 8 > "${cfg}/zone_max_open"
+		echo 8 > "${cfg}/zone_max_active"
+	fi
+
+	echo 1 > "${cfg}/power" || exit_failed "Start null_blk device $n failed"
+
+	export zonefs_test_nullbn="$n"
 
 	echo "$n"
 }
 
+function create_regular_nullb()
+{
+	create_nullb 0 || \
+		exit_failed " --> Create regular null_blk device failed"
+}
+
+function create_zoned_nullb()
+{
+	create_nullb 1 || \
+		exit_failed " --> Create zoned null_blk device failed"
+}
+
 function destroy_nullb()
 {
-        local n=$1
+	local cfg="/sys/kernel/config/nullb/nullb$1"
 
-	echo 0 > /sys/kernel/config/nullb/nullb$n/power
-	rmdir /sys/kernel/config/nullb/nullb$n
+	echo 0 > "${cfg}/power"
+	rmdir "${cfg}"
 
-	rmmod null_blk >> /dev/null 2>&1
+	rmmod null_blk > /dev/null 2>&1
+
+	unset zonefs_test_nullbn
 }
 
 function ls_nr_files()
