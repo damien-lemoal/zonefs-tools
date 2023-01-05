@@ -8,7 +8,7 @@
 . scripts/test_lib
 
 if [ $# == 0 ]; then
-	echo "File names and inode numbers (default)"
+	echo "File names and inode numbers (aggr_cnv)"
         exit 0
 fi
 
