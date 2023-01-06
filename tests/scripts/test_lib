@@ -551,11 +551,28 @@ function require_nullb_readonly()
 	[[ ${have_zone_readonly} -eq 0 ]] && exit_skip "null_blk does not support zone_readonly config"
 }
 
+function require_nullb_offline()
+{
+	modprobe null_blk nr_devices=0 || exit_failed "Failed to load null_blk module"
+	have_zone_offline=$(grep -c "zone_offline" "/sys/kernel/config/nullb/features")
+	rmmod null_blk > /dev/null 2>&1
+
+	[[ ${have_zone_offline} -eq 0 ]] && exit_skip "null_blk does not support zone_offline config"
+}
+
+
 function set_nullb_first_seq_zone_readonly()
 {
 	local cfg="/sys/kernel/config/nullb/nullb$1"
 
 	echo $(( 10 * 32 * 1048576 / 512 )) > "${cfg}/zone_readonly"
+}
+
+function set_nullb_first_seq_zone_offline()
+{
+	local cfg="/sys/kernel/config/nullb/nullb$1"
+
+	echo $(( 10 * 32 * 1048576 / 512 )) > "${cfg}/zone_offline"
 }
 
 function fs_ro()
