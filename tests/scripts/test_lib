@@ -366,12 +366,12 @@ function file_size()
 function check_file_size()
 {
 	local file="$1"
-	local expected_size="$2"
-	local sz
+	local expected_fsz="$2"
+	local fsz
 
-	sz=$(file_size "${file}")
-	[[ "$sz" == "${expected_size}" ]] || \
-		exit_failed " --> Invalid file size $sz B, expected 4096 B"
+	fsz=$(file_size "${file}")
+	[[ "${fsz}" == "${expected_fsz}" ]] || \
+		exit_failed " --> Invalid file size ${fsz} B, expected ${expected_fsz} B"
 }
 
 function file_max_size()
@@ -594,12 +594,13 @@ function write_file()
 {
 	local file="$1"
 	local sz=$2
+	local fsz=$(file_size "${file}")
 
 	dd if=/dev/zero of="${file}" \
 		oflag=direct,append bs=${sz} count=1 \
 		conv=nocreat,notrunc || \
 		exit_failed " --> write ${sz} B to ${file} FAILED"
-	check_file_size "${file}" ${sz}
+	check_file_size "${file}" $(( fsz + sz ))
 }
 
 function write_file_err()
@@ -613,6 +614,36 @@ function write_file_err()
 		conv=nocreat,notrunc && \
 		exit_failed " --> write ${sz} B to ${file} SUCCESS (should FAIL)"
 	check_file_size "${file}" ${expected_fsz}
+}
+
+function write_file_async_err()
+{
+	local file="$1"
+	local sz=$2
+	local expected_fsz=$3
+
+	tools/zio --write --fflag=direct --ofst=$(file_size "${file}") \
+        	--async=1 --size=${sz} --nio=1 "${file}" && \
+		exit_failed " --> async write ${sz} B to ${file} SUCCESS (should FAIL)"
+	check_file_size "${file}" ${expected_fsz}
+}
+
+function write_file_zone()
+{
+	local dev="$1"
+	local file="$2"
+	local ofst
+	local fino
+	local fsz
+
+	fino=$(get_ino "${file}")
+	fsz=$(file_size "${file}")
+	ofst=$(( (fino * zone_bytes + fsz) / 4096 ))
+
+	dd if=/dev/zero of="${dev}" \
+		oflag=direct bs=4096 count=1 seek=${ofst} \
+		conv=nocreat,notrunc || \
+		exit_failed " --> write 4096 B to ${dev} in zone at $(( fino * zone_sectors )) FAILED"
 }
 
 function min()
