@@ -27,14 +27,17 @@ function usage()
 {
 	echo "Usage: $(basename "$0") [Options] <Zoned device node file>"
 	echo "Options:"
-	echo "  -l             : List all tests"
-	echo "  -g <directory> : Use this directory to save log files."
-	echo "                   default: logs/<dev name>"
-	echo "  -t <test num>  : Execute only the specified test case. Can be"
-	echo "                   specified multiple times."
-	echo "  -s             : Short test (do not execute tests that take a"
-	echo "                   long time)"
-	echo "  -h, --help     : This help message"
+	echo "  -l                  : List all tests"
+	echo "  -g <directory>      : Use this directory to save log files."
+	echo "                        default: logs/<dev name>"
+	echo "  -t <case>[-<case2>] : Execute only the specified test <case>."
+	echo "                        If a second case is specified after a hyphen,"
+	echo "                        all test cases from <case> to <case2> will be"
+	echo "                        executed. This option can be specified"
+	echo "                        multiple times."
+	echo "  -s                  : Short test (do not execute tests that take a"
+	echo "                        long time)"
+	echo "  -h, --help          : This help message"
 }
 
 # Check configuration
@@ -71,6 +74,43 @@ declare list=false
 logdir=""
 export short=false
 
+# Get full test list
+declare -a testlist
+for f in  scripts/*.sh; do
+	testlist+=("$(test_num $f)")
+done
+
+function get_test_range()
+{
+	local case="$1"
+	local tstart=$(echo "${case}" | cut -f1 -d'-')
+	local tend=$(echo "${case}" | cut -f2 -d'-')
+	local add=0
+	declare -a trange
+
+	for t in "${testlist[@]}"; do
+
+		if [ "$t" == "$tstart" ]; then
+			add=1
+		fi
+
+		if [ "$add" == "1" ]; then
+			trange+=("scripts/$t.sh")
+		fi
+
+		if [ "$t" == "$tend" ]; then
+			add=0
+		fi
+	done
+
+	if [ "${#trange[@]}" == "0" ]; then
+		echo "Invalid test range $1"
+		exit 1;
+	fi
+
+	tests+=( "${trange[@]}" )
+}
+
 while [ "${1#-}" != "$1" ]; do
 	case "$1" in
 	-h | --help)
@@ -78,12 +118,7 @@ while [ "${1#-}" != "$1" ]; do
 		exit 0
 		;;
 	-t)
-		t="scripts/$2.sh"
-		if [ ! -e "$t" ]; then
-			echo "Invalid test number $2"
-			exit 1;
-		fi
-		tests+=("$t")
+		get_test_range "$2"
 		shift
 		shift
 		;;
@@ -113,7 +148,7 @@ if [ ! $list ] && [ $# -lt 1 ]; then
 fi
 
 # Get list of tests
-if [ "${#tests[@]}" = 0 ]; then
+if [ "${#tests[@]}" == "0" ]; then
 	for f in  scripts/*.sh; do
 		tests+=("$f")
 	done
@@ -287,7 +322,7 @@ for t in "${tests[@]}"; do
 	tnum="$(test_num $t)"
 
 	echo -n "  Test ${tnum}: "
-	printf "%-52s ... " "$( $t )"
+	printf "%-60s ... " "$( $t )"
 
 	run_test "$t" "$1" > "${logdir}/${tnum}.log" 2>&1
 	ret=$?
