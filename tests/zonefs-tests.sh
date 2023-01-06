@@ -38,6 +38,12 @@ function usage()
 }
 
 # Check configuration
+[[ $(modinfo null_blk) ]] ||
+	{
+		echo "null_blk module is not available."
+		exit 1
+	}
+
 [[ $(type -P "tools/zio") && $(type -P "tools/zopen") ]] ||
 	{
 		echo "Test tools not found."
@@ -280,7 +286,7 @@ echo "Running tests"
 for t in "${tests[@]}"; do
 	tnum="$(test_num $t)"
 
-	echo -n "  Test ${tnum}:  "
+	echo -n "  Test ${tnum}: "
 	printf "%-52s ... " "$( $t )"
 
 	run_test "$t" "$1" > "${logdir}/${tnum}.log" 2>&1
@@ -302,6 +308,10 @@ for t in "${tests[@]}"; do
 	((total++))
 	echo -e "$status"
 
+	if [ -f "${logdir}/.zonefs_test_nullbn" ]; then
+		destroy_nullb "$(cat ${logdir}/.zonefs_test_nullbn)"
+	fi
+
 	if [ "$aborted" == 1 ]; then
 		break
 	fi
@@ -315,6 +325,23 @@ echo "$passed / $total tests passed"
 umount "$zonefs_mntdir" >> /dev/null 2>&1
 rm -rf "$zonefs_mntdir" >> /dev/null 2>&1
 rm -f local-* >> /dev/null 2>&1
+
+# cleanup env
+unset short
+unset zonefs_mntdir
+unset logdir
+unset nr_zones
+unset zone_sectors
+unset zone_bytes
+unset nr_cnv_zones
+unset nr_seq_zones
+unset total_usable_sectors
+unset iosize
+unset nr_cnv_files
+unset nr_seq_files
+unset seq_file_0_zone_start_sector
+unset seq_file_0_max_size
+unset zonefs_has_sysfs
 
 if [ "$passed" != "$total" ]; then
 	exit 1

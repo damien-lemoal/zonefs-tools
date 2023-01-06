@@ -138,11 +138,6 @@ function exit_skip()
 function exit_failed()
 {
 	echo "$1"
-
-	if [ ! -z "${zonefs_test_nullbn}" ]; then
-		destroy_nullb "${zonefs_test_nullbn}"
-	fi
-
 	exit 1
 }
 
@@ -208,6 +203,10 @@ function get_perm()
 function check_file_perm()
 {
 	perm="$(get_perm "$1")"
+        if [ "$perm" == "0" ]; then
+		perm="000"
+	fi
+
         if [ "$perm" != "$2" ]; then
 		echo "file $1: invalid permission $perm (expected $2)"
 		exit 1
@@ -354,9 +353,25 @@ function check_uid_gid()
 	done <<< "$list"
 }
 
+function truncate_file()
+{
+	truncate --no-create --size="$2" "$1"
+}
+
 function file_size()
 {
 	stat -c "%s" "$1"
+}
+
+function check_file_size()
+{
+	local file="$1"
+	local expected_size="$2"
+	local sz
+
+	sz=$(file_size "${file}")
+	[[ "$sz" == "${expected_size}" ]] || \
+		exit_failed " --> Invalid file size $sz B, expected 4096 B"
 }
 
 function file_max_size()
@@ -458,7 +473,7 @@ function create_nullb()
 
 	echo 1 > "${cfg}/power" || exit_failed "Start null_blk device $n failed"
 
-	export zonefs_test_nullbn="$n"
+	echo "$n" > "${logdir}/.zonefs_test_nullbn"
 
 	echo "$n"
 }
@@ -484,7 +499,7 @@ function destroy_nullb()
 
 	rmmod null_blk > /dev/null 2>&1
 
-	unset zonefs_test_nullbn
+	rm -f "${logdir}/.zonefs_test_nullbn"
 }
 
 function ls_nr_files()
@@ -520,6 +535,67 @@ function require_cnv_files()
 function require_sysfs()
 {
 	[[ ${zonefs_has_sysfs} -eq 1 ]] || exit_skip "sysfs attributes not supported"
+}
+
+function require_null_blk()
+{
+	modinfo null_blk || exit_failed "null_blk module is not available"
+}
+
+function require_nullb_readonly()
+{
+	modprobe null_blk nr_devices=0 || exit_failed "Failed to load null_blk module"
+	have_zone_readonly=$(grep -c "zone_readonly" "/sys/kernel/config/nullb/features")
+	rmmod null_blk > /dev/null 2>&1
+
+	[[ ${have_zone_readonly} -eq 0 ]] && exit_skip "null_blk does not support zone_readonly config"
+}
+
+function set_nullb_first_seq_zone_readonly()
+{
+	local cfg="/sys/kernel/config/nullb/nullb$1"
+
+	echo $(( 10 * 32 * 1048576 / 512 )) > "${cfg}/zone_readonly"
+}
+
+function fs_ro()
+{
+	grep "${zonefs_mntdir}" "/proc/mounts" | grep -c "ro,"
+}
+
+function check_fs_is_readonly()
+{
+	[[ $(fs_ro) -eq 1 ]] || exit_failed "File system is not readonly"
+}
+
+function check_fs_is_writable()
+{
+	[[ $(fs_ro) -eq 0 ]] || exit_failed "File system is readonly"
+}
+
+function write_file()
+{
+	local file="$1"
+	local sz=$2
+
+	dd if=/dev/zero of="${file}" \
+		oflag=direct,append bs=${sz} count=1 \
+		conv=nocreat,notrunc || \
+		exit_failed " --> write ${sz} B to ${file} FAILED"
+	check_file_size "${file}" ${sz}
+}
+
+function write_file_err()
+{
+	local file="$1"
+	local sz=$2
+	local expected_fsz=$3
+
+	dd if=/dev/zero of="${file}" \
+		oflag=direct,append bs=${sz} count=1 \
+		conv=nocreat,notrunc && \
+		exit_failed " --> write ${sz} B to ${file} SUCCESS (should FAIL)"
+	check_file_size "${file}" ${expected_fsz}
 }
 
 function min()
