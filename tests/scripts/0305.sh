@@ -8,7 +8,7 @@
 . scripts/test_lib
 
 if [ $# == 0 ]; then
-	echo "Sequential file unaligned write (async IO)"
+	echo "Sequential file unaligned write (async)"
         exit 0
 fi
 
