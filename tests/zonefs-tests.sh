@@ -272,12 +272,12 @@ function kmsg_log()
 
 function kmsg_log_start()
 {
-	kmsg_log "#### zonefs-test case $1 start ####"
+	kmsg_log "++++ zonefs-test case $1 start ++++"
 }
 
 function kmsg_log_end()
 {
-	kmsg_log "#### zonefs-test case $1 end ####"
+	kmsg_log "---- zonefs-test case $1 end ----"
 }
 
 function run_test()
