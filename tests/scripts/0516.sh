@@ -2,71 +2,77 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
-# Copyright (C) 2022 Western Digital Corporation or its affiliates.
+# Copyright (C) 2023 Western Digital Corporation or its affiliates.
 #
 
 . scripts/test_lib
 
 if [ $# == 0 ]; then
-	echo "Sysfs conv files write-open"
+	echo "Sysfs seq files active after truncate to 0 (default)"
         exit 0
 fi
 
-require_cnv_files
 require_sysfs
 
 zonefs_mkfs "$1"
 zonefs_mount "$1"
 
-echo "Check write open"
+i=0
+maxact=$(get_max_active_zones "$1")
+if [ ${maxact} -eq 0 ]; then
+	maxact=4
+fi
 
-# Check that opening a conv file does not change the write open count
-tools/zopen --nrfiles="$nr_cnv_files" --fflag=read --pause "${zonefs_mntdir}/cnv" &
-zopid=$!
-sleep 1
+# Write 4K in maxact files
+n = 0
+for((i=0; i<${maxact}; i++)); do
+	echo "Writing seq file ${i}"
+
+	dd if=/dev/zero of="${zonefs_mntdir}/seq/${i}" bs=1048576 \
+		count=1 oflag=direct || \
+		exit_failed " --> Write seq file ${i} FAILED"
+
+	n=$(( n + 1 ))
+
+	nract=$(sysfs_nr_active_seq_files "$1")
+	[[ ${nract} -eq ${n} ]] || \
+		exit_failed " --> nr_active_seq_files is ${nract} (should be ${n})"
+
+	nrwro=$(sysfs_nr_wro_seq_files "$1")
+	[[ ${nrwro} -eq 0 ]] || \
+		exit_failed " --> nr_wro_seq_files is ${nrwro} after close (should be 0)"
+done
+
+# Remount and check again
+zonefs_umount
+zonefs_mount "$1"
 
 nract=$(sysfs_nr_active_seq_files "$1")
-[[ ${nract} -eq 0 ]] || \
-	exit_failed "nr_active_seq_files is ${nract} after read open (should be 0)"
+[[ ${nract} -eq ${maxact} ]] || \
+	exit_failed " --> nr_active_seq_files is ${nract} (should be ${maxact})"
 
 nrwro=$(sysfs_nr_wro_seq_files "$1")
 [[ ${nrwro} -eq 0 ]] || \
-	exit_failed "nr_wro_seq_files is ${nrwro} after read open (should be 0)"
+	exit_failed " --> nr_wro_seq_files is ${nrwro} after close (should be 0)"
 
-kill ${zopid}
-wait ${zopid}
+# Truncate the files: the active count should go to 0
+n=${maxact}
+for((i=0; i<${maxact}; i++)); do
+	echo "Truncating seq file ${i}"
 
-nract=$(sysfs_nr_active_seq_files "$1")
-[[ ${nract} -eq 0 ]] || \
-	exit_failed "nr_active_seq_files is ${nract} after read close (should be 0)"
+	truncate_file "${zonefs_mntdir}/seq/${i}" 0 || \
+                exit_failed " --> Truncate seq file ${i} to 0 FAILED"
 
-nrwro=$(sysfs_nr_wro_seq_files "$1")
-[[ ${nrwro} -eq 0 ]] || \
-	exit_failed "nr_wro_seq_files is ${nrwro} after read close (should be 0)"
+	n=$(( n - 1 ))
 
-# Same with write open
-tools/zopen --nrfiles="$nr_cnv_files" --fflag=write --pause "${zonefs_mntdir}/cnv" &
-zopid=$!
-sleep 1
+	nract=$(sysfs_nr_active_seq_files "$1")
+	[[ ${nract} -eq ${n} ]] || \
+		exit_failed " --> nr_active_seq_files is ${nract} (should be ${n})"
 
-nract=$(sysfs_nr_active_seq_files "$1")
-[[ ${nract} -eq 0 ]] || \
-	exit_failed "nr_active_seq_files is ${nract} after write open (should be 0)"
-
-nrwro=$(sysfs_nr_wro_seq_files "$1")
-[[ ${nrwro} -eq 0 ]] || \
-	exit_failed "nr_wro_seq_files is ${nrwro} after write open (should be 0)"
-
-kill ${zopid}
-wait ${zopid}
-
-nract=$(sysfs_nr_active_seq_files "$1")
-[[ ${nract} -eq 0 ]] || \
-	exit_failed "nr_active_seq_files is ${nract} after write close (should be 0)"
-
-nrwro=$(sysfs_nr_wro_seq_files "$1")
-[[ ${nrwro} -eq 0 ]] || \
-	exit_failed "nr_wro_seq_files is ${nrwro} after write close (should be 0)"
+	nrwro=$(sysfs_nr_wro_seq_files "$1")
+	[[ ${nrwro} -eq 0 ]] || \
+		exit_failed " --> nr_wro_seq_files is ${nrwro} after close (should be 0)"
+done
 
 zonefs_umount
 

@@ -24,20 +24,23 @@ if [ ${maxact} -eq 0 ]; then
 fi
 
 # Write 4K in maxact files
-for((i=1; i<=${maxact}; i++)); do
+n=0
+for((i=0; i<${maxact}; i++)); do
 	echo "Writing seq file ${i}"
 
 	dd if=/dev/zero of="${zonefs_mntdir}/seq/${i}" bs=1048576 \
 		count=1 oflag=direct || \
-		exit_failed "Write seq file ${i} failed"
+		exit_failed " --> Write seq file ${i} FAILED"
+
+	n=$(( n + 1 ))
 
 	nract=$(sysfs_nr_active_seq_files "$1")
-	[[ ${nract} -eq ${i} ]] || \
-		exit_failed "nr_active_seq_files is ${nract} (should be ${i})"
+	[[ ${nract} -eq ${n} ]] || \
+		exit_failed " --> nr_active_seq_files is ${nract} (should be ${n})"
 
 	nrwro=$(sysfs_nr_wro_seq_files "$1")
 	[[ ${nrwro} -eq 0 ]] || \
-		exit_failed "nr_wro_seq_files is ${nrwro} after close (should be 0)"
+		exit_failed " --> nr_wro_seq_files is ${nrwro} after close (should be 0)"
 done
 
 # Remount and check again
@@ -46,14 +49,15 @@ zonefs_mount "$1"
 
 nract=$(sysfs_nr_active_seq_files "$1")
 [[ ${nract} -eq ${maxact} ]] || \
-	exit_failed "nr_active_seq_files is ${nract} (should be ${maxact})"
+	exit_failed " --> nr_active_seq_files is ${nract} (should be ${maxact})"
 
 nrwro=$(sysfs_nr_wro_seq_files "$1")
 [[ ${nrwro} -eq 0 ]] || \
-	exit_failed "nr_wro_seq_files is ${nrwro} after close (should be 0)"
+	exit_failed " --> nr_wro_seq_files is ${nrwro} after close (should be 0)"
 
 # Fill-up the files: the active count should go to 0
-for((i=1; i<=${maxact}; i++)); do
+n=${maxact}
+for((i=0; i<${maxact}; i++)); do
 	echo "Filling seq file ${i}"
 
 	fsize=$(file_max_size "${zonefs_mntdir}/seq/${i}")
@@ -61,17 +65,17 @@ for((i=1; i<=${maxact}; i++)); do
 
 	dd if=/dev/zero of="${zonefs_mntdir}/seq/${i}" bs=1048576 \
 		seek=1 count=${wcount} oflag=direct conv=notrunc || \
-		exit_failed "Fill seq file ${i} failed"
+		exit_failed " --> Fill seq file ${i} FAILED"
 
-	n=$(( maxact - i ))
+	n=$(( n - 1 ))
 
 	nract=$(sysfs_nr_active_seq_files "$1")
 	[[ ${nract} -eq ${n} ]] || \
-		exit_failed "nr_active_seq_files is ${nract} (should be ${n})"
+		exit_failed " --> nr_active_seq_files is ${nract} (should be ${n})"
 
 	nrwro=$(sysfs_nr_wro_seq_files "$1")
 	[[ ${nrwro} -eq 0 ]] || \
-		exit_failed "nr_wro_seq_files is ${nrwro} after close (should be 0)"
+		exit_failed " --> nr_wro_seq_files is ${nrwro} after close (should be 0)"
 done
 
 zonefs_umount
