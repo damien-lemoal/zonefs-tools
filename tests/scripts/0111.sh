@@ -22,12 +22,11 @@ zonefs_mount "$1"
 echo "Checking root inode $zonefs_mntdir"
 check_dir_ino "$zonefs_mntdir" ${nr_zones}
 
-echo "Checking conventional files"
-
+echo "Checking cnv directory inode number"
 check_dir_ino "$zonefs_mntdir/cnv" $(( nr_zones + 1 ))
-check_files_ino "$zonefs_mntdir/cnv" ${nr_cnv_files} 1
 
-echo "Checking sequential files"
+echo "Checking cnv directory files inode number"
+check_files_ino "$zonefs_mntdir/cnv" ${nr_cnv_files} 1
 
 if $short; then
 	nrfiles=$(min ${nr_seq_files} 2000)
@@ -35,7 +34,10 @@ else
 	nrfiles=${nr_seq_files}
 fi
 
+echo "Checking seq directory inode number"
 check_dir_ino "$zonefs_mntdir/seq" $(( nr_zones + 2 ))
+
+echo "Checking seq directory files inode number"
 check_files_ino "$zonefs_mntdir/seq" \
 	${nrfiles} \
 	$(( seq_file_0_zone_start_sector / zone_sectors ))

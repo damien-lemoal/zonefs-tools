@@ -29,7 +29,10 @@ if [ "$nr_cnv_files" != "0" ]; then
 		nrfiles=${nr_cnv_files}
 	fi
 
+	echo "Checking cnv directory inode number"
 	check_dir_ino "$zonefs_mntdir/cnv" $(( nr_zones + 1 ))
+
+	echo "Checking cnv directory files inode number"
 	check_files_ino "$zonefs_mntdir/cnv" ${nrfiles} 1
 fi
 
@@ -41,7 +44,10 @@ else
 	nrfiles=${nr_seq_files}
 fi
 
+echo "Checking seq directory inode number"
 check_dir_ino "$zonefs_mntdir/seq" $(( nr_zones + 2 ))
+
+echo "Checking seq directory files inode number"
 check_files_ino "$zonefs_mntdir/seq" \
 	${nrfiles} \
 	$(( seq_file_0_zone_start_sector / zone_sectors ))
