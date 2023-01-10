@@ -27,7 +27,7 @@ fi
 for((i=1; i<=${maxact}; i++)); do
 	echo "Writing seq file ${i}"
 
-	dd if=/dev/zero of="${zonefs_mntdir}/seq/${i}" bs=4096 \
+	dd if=/dev/zero of="${zonefs_mntdir}/seq/${i}" bs=1048576 \
 		count=1 oflag=direct || \
 		exit_failed "Write seq file ${i} failed"
 
@@ -57,9 +57,9 @@ for((i=1; i<=${maxact}; i++)); do
 	echo "Filling seq file ${i}"
 
 	fsize=$(file_max_size "${zonefs_mntdir}/seq/${i}")
-	wcount=$(( fsize / 4096 - 1 ))
+	wcount=$(( fsize / 1048576 - 1 ))
 
-	dd if=/dev/zero of="${zonefs_mntdir}/seq/${i}" bs=4096 \
+	dd if=/dev/zero of="${zonefs_mntdir}/seq/${i}" bs=1048576 \
 		seek=1 count=${wcount} oflag=direct conv=notrunc || \
 		exit_failed "Fill seq file ${i} failed"
 
