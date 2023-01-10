@@ -234,7 +234,7 @@ export iosize=$((4096 * 64))
 if [ "$nr_cnv_zones" == 0 ]; then
 	nr_cnv_files=0
 	nr_seq_files=$(( nr_seq_zones - 1 ))
-	seq_file_0_zone_start_sector=$(( zone_sectors * 2 ))
+	seq_file_0_zone_start_sector=$zone_sectors
 elif [ "$nr_cnv_zones" == 1 ]; then
 	nr_cnv_files=0
 	nr_seq_files=$nr_seq_zones
