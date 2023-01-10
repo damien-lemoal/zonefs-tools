@@ -91,7 +91,9 @@ scriptdir="$(cd "$(dirname "$0")" && pwd)"
 
 modprobe null_blk nr_devices=0
 
-function set_zone_res()
+nr_configs=5
+
+function set_config()
 {
         case "$1" in
 		"0")
@@ -110,8 +112,14 @@ function set_zone_res()
 			zone_max_open=$(( $capacity / $zone_size / 8 ))
 			zone_max_active=$(( $capacity / $zone_size / 8 + 1 ))
                         ;;
+		"4")
+			capacity=$(( capacity + zone_size / 2 + 1 ))
+			nr_conv=0
+			zone_max_open=$(( $capacity / $zone_size / 8 ))
+			zone_max_active=$(( $capacity / $zone_size / 8 + 1 ))
+                        ;;
                 *)
-			echo "Invalid zone resource mode"
+			echo "Invalid configuration"
 			exit 1
                         ;;
         esac
@@ -177,9 +185,10 @@ function destroy_zoned_nullb()
 declare -i rc=0
 
 # Run all open/active configurations (3 by default)
-for (( m=0; m<=3; m++ )); do
+for (( m=0; m<$nr_configs; m++ )); do
 
-	set_zone_res "$m"
+	set_config "$m"
+
 	ndev=$(create_zoned_nullb)
 	moz=$(cat /sys/block/"$ndev"/queue/max_open_zones)
 	maz=$(cat /sys/block/"$ndev"/queue/max_active_zones)
@@ -187,14 +196,14 @@ for (( m=0; m<=3; m++ )); do
 	nrc=$(blkzone report "/dev/$ndev" | grep -c CONVENTIONAL)
 
 	echo ""
-	echo "Run tests against /dev/$ndev..."
+	echo "Config ${m}:"
 	echo "    Zone size: $zone_size MB, zone capacity: $zone_capacity MB"
 	echo "    $nrz zones, $nrc conventional zones"
 	echo "    $moz max open zones ($zone_max_open)"
 	echo "    $maz max active zones ($zone_max_active)"
 	echo ""
 
-	logfile="${ndev}-moz${zone_max_open}-maz${zone_max_active}-zonefs-tests.log"
+	logdir="logs/${ndev}-conv${nr_conv}-moz${zone_max_open}-maz${zone_max_active}"
 
 	if ! ./zonefs-tests.sh ${testopts} "-g" "$logfile" "/dev/$ndev"; then
 		rc=1
@@ -209,7 +218,7 @@ for (( m=0; m<=3; m++ )); do
 
 done
 
-rmmod null_blk >> /dev/null 2>&1
+rmmod null_blk > /dev/null 2>&1
 
 echo ""
 if [ "$rc" != 0 ]; then
