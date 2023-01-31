@@ -15,7 +15,7 @@ if BUILD_RPM
 
 rpmdir = $(abs_top_builddir)/rpmbuild
 
-EXTRA_DIST += zonefs-tools.spec
+EXTRA_DIST += zonefs-tools.spec tests
 RPMARCH=`$(RPM) --eval %_target_cpu`
 
 rpm: dist

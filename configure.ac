@@ -59,10 +59,7 @@ AC_CONFIG_FILES([
 	Makefile
 	man/Makefile
 	src/Makefile
-])
-
-AM_COND_IF([BUILD_TESTS], [
-	AC_CONFIG_FILES([tests/tools/Makefile])
+	tests/tools/Makefile
 ])
 
 AC_OUTPUT
