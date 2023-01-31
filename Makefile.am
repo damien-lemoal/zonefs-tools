@@ -31,3 +31,6 @@ rpm:
 	@echo "Building RPM packages requires rpmbuild and rpm utilities"
 	exit 1
 endif
+
+CLEANFILES = *.rpm *.tar.gz
+DISTCLEANFILES = *.rpm *.tar.gz configure configure~
