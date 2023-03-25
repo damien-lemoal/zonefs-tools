@@ -250,14 +250,24 @@ export seq_file_0_zone_start_sector
 export seq_file_0_max_size=$(get_zone_capacity_bytes "$dev" $seq_file_0_zone_start_sector)
 
 # zonefs features
-modprobe zonefs
+zonefs_module=$(modprobe -c | grep zonefs | wc -l)
+if [ $zonefs_module != 0 ]; then
+	modprobe zonefs
+elif [ $( cat /proc/filesystems | grep zonefs | wc -l) = 0 ]; then
+	echo "the kernel does not support zonefs"
+	return 1
+fi
+export zonefs_module
+
 if [ -d "/sys/fs/zonefs" ]; then
 	zonefs_has_sysfs=1
 else
 	zonefs_has_sysfs=0
 fi
 export zonefs_has_sysfs
-rmmod zonefs
+if [ $zonefs_module != 0 ]; then
+	rmmod zonefs
+fi
 
 # Set IO scheduler
 echo mq-deadline > "/sys/block/$bdev/queue/scheduler" || \
@@ -287,7 +297,9 @@ function run_test()
 
 	kmsg_log_start ${tnum}
 
-	modprobe zonefs || (echo "FAILED (modprobe)"; return 1)
+	if [ $zonefs_module != 0 ]; then
+		modprobe zonefs || (echo "FAILED (modprobe)"; return 1)
+	fi
 
 	echo "## Test ${tnum}: $( $1 )"
 	echo ""
@@ -304,7 +316,9 @@ function run_test()
 	echo ""
 
 	umount "$zonefs_mntdir" >> /dev/null 2>&1
-	rmmod zonefs || if [ $ret == 0 ]; then echo "FAILED (rmmod)"; ret=1; fi
+	if [ $zonefs_module != 0 ]; then
+		rmmod zonefs || if [ $ret == 0 ]; then echo "FAILED (rmmod)"; ret=1; fi
+	fi
 
 	kmsg_log_end ${tnum}
 
