@@ -253,9 +253,11 @@ export seq_file_0_max_size=$(get_zone_capacity_bytes "$dev" $seq_file_0_zone_sta
 zonefs_module=$(modprobe -c | grep zonefs | wc -l)
 if [ $zonefs_module != 0 ]; then
 	modprobe zonefs
-elif [ $( cat /proc/filesystems | grep zonefs | wc -l) = 0 ]; then
-	echo "the kernel does not support zonefs"
-	return 1
+else
+	have_zonefs=$(cat /proc/filesystems | grep -c zonefs)
+	if [ $have_zonefs -eq 0 ]; then
+		exit_failed "The kernel does not support zonefs"
+	fi
 fi
 export zonefs_module
 
