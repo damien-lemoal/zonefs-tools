@@ -250,7 +250,7 @@ export seq_file_0_zone_start_sector
 export seq_file_0_max_size=$(get_zone_capacity_bytes "$dev" $seq_file_0_zone_start_sector)
 
 # zonefs features
-zonefs_module=$(modprobe -c | grep zonefs | wc -l)
+zonefs_module=$(modprobe -c | grep -c zonefs)
 if [ $zonefs_module != 0 ]; then
 	modprobe zonefs
 else
