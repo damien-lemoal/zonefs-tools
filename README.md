@@ -290,7 +290,7 @@ The lists of test cases executed can be listed with the *-l* option.
 
 Read the [CONTRIBUTING](CONTRIBUTING) file and send patches to:
 
-	Damien Le Moal <damien.lemoal@opensource.wdc.com>
+	Damien Le Moal <dlemoal@kernel.org>
 
 If you believe your changes require kernel eyes or review, Cc the Linux kernel
 file system development mailing list:
