@@ -184,7 +184,7 @@ function destroy_zoned_nullb()
 
 declare -i rc=0
 
-# Run all open/active configurations (3 by default)
+# Run all open/active configurations
 for (( m=0; m<$nr_configs; m++ )); do
 
 	set_config "$m"
@@ -205,7 +205,7 @@ for (( m=0; m<$nr_configs; m++ )); do
 
 	logdir="logs/${ndev}-conv${nr_conv}-moz${zone_max_open}-maz${zone_max_active}"
 
-	if ! ./zonefs-tests.sh ${testopts} "-g" "$logfile" "/dev/$ndev"; then
+	if ! ./zonefs-tests.sh ${testopts} "-g" "$logdir" "/dev/$ndev"; then
 		rc=1
 	fi
 
