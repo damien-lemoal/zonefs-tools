@@ -183,6 +183,10 @@ function destroy_zoned_nullb()
 }
 
 declare -i rc=0
+declare -i nrtests=0
+declare -i passed=0
+declare -i skipped=0
+declare -i failed=0
 
 # Run all open/active configurations
 for (( m=0; m<$nr_configs; m++ )); do
@@ -212,6 +216,18 @@ for (( m=0; m<$nr_configs; m++ )); do
 	sleep 1
 	destroy_zoned_nullb "$ndev"
 
+	val=$(tail -1 "${logdir}/zonefs-tests.log" | cut -f1 -d' ')
+	passed=$(( passed + val ))
+
+	val=$(tail -1 "${logdir}/zonefs-tests.log" | cut -f3 -d' ')
+	nrtests=$(( nrtests + val ))
+
+	val=$(tail -1 "${logdir}/zonefs-tests.log" | cut -f2 -d'(' | cut -f1 -d' ')
+	skipped=$(( skipped + val ))
+
+	val=$(tail -1 "${logdir}/zonefs-tests.log" | cut -f8 -d' ')
+	failed=$(( failed + val ))
+
 	if [ "$aborted" == 1 ] || [ "$testopts" != "" ]; then
 		break
 	fi
@@ -221,6 +237,9 @@ done
 rmmod null_blk > /dev/null 2>&1
 
 echo ""
+echo "Overall results:"
+echo "${passed} / ${nrtests} tests passed (${skipped} skipped, ${failed} failures)"
+
 if [ "$rc" != 0 ]; then
 	echo "Failures detected"
 	exit 1
