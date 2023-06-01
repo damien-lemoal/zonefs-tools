@@ -217,8 +217,8 @@ rm -rf "${logdir}/*" > /dev/null 2>&1
 export logdir
 
 passed=0
-total=0
-rc=0
+skipped=0
+failed=0
 
 # Drive parameters
 echo "Gathering information on $dev..."
@@ -339,6 +339,8 @@ echo "  $(get_max_open_zones $dev) max open zones"
 echo "  $(get_max_active_zones $dev) max active zones"
 echo "Running tests"
 
+nrtests=${#tests[@]}
+
 for t in "${tests[@]}"; do
 	tnum="$(test_num $t)"
 
@@ -349,19 +351,15 @@ for t in "${tests[@]}"; do
 	ret=$?
 	if [ "$ret" == 0 ]; then
 		status="\e[92mPASS\e[0m"
-		rc=0
+		((passed++))
 	elif [ "$ret" == 2 ]; then
 		status="skip"
-		rc=0
+		((skipped++))
 	else
 		status="\e[31mFAIL\e[0m"
-		rc=1
+		((failed++))
 	fi
 
-	if [ "$rc" == 0 ]; then
-		((passed++))
-	fi
-	((total++))
 	echo -e "$status"
 
 	if [ -f "${logdir}/.zonefs_test_nullbn" ]; then
@@ -376,7 +374,7 @@ for t in "${tests[@]}"; do
 done
 
 echo ""
-echo "$passed / $total tests passed"
+echo "${passed} / ${nrtests} tests passed (${skipped} skipped, ${failed} failures)"
 
 # End logging the run
 } | tee -i "${runlog}" 2>&1
@@ -402,7 +400,7 @@ unset seq_file_0_zone_start_sector
 unset seq_file_0_max_size
 unset zonefs_has_sysfs
 
-if [ "$passed" != "$total" ]; then
+if [ ${failed} -ne 0 ]; then
 	exit 1
 fi
 
