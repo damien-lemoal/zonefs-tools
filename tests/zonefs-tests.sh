@@ -327,6 +327,11 @@ function run_test()
 	return $ret
 }
 
+runlog="${logdir}/zonefs-tests.log"
+
+# Start logging the run
+{
+
 echo "zonefs-tests on $dev:"
 echo "  $nr_zones zones ($nr_cnv_zones conventional zones, $nr_seq_zones sequential zones)"
 echo "  $zone_sectors 512B sectors zone size ($(( zone_bytes / 1048576 )) MiB)"
@@ -372,6 +377,9 @@ done
 
 echo ""
 echo "$passed / $total tests passed"
+
+# End logging the run
+} | tee -i "${runlog}" 2>&1
 
 umount "$zonefs_mntdir" >> /dev/null 2>&1
 rm -rf "$zonefs_mntdir" >> /dev/null 2>&1
