@@ -272,8 +272,8 @@ if [ $zonefs_module != 0 ]; then
 fi
 
 # Set IO scheduler
-echo mq-deadline > "/sys/block/$bdev/queue/scheduler" || \
-	exit_failed "Failed to set scheduler to mq-deadline"
+set_io_scheduler "${bdev}" "mq-deadline" || \
+	exit_failed "Set ${bdev} scheduler to mq-deadline failed"
 
 function kmsg_log()
 {
