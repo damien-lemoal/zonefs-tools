@@ -28,12 +28,13 @@ mask=$(($pbs - 1))
 
 bs=$(get_zone_append_max_bytes "$1")
 bs=$(($bs + $pbs))
+bs=$((($bs + $mask) & ~$mask))
 
-bs=$((($bs + $mask & ~$mask)))
+echo "Using ${bs} IO size"
 
 fio --name=seqwrite --filename="$zonefs_mntdir"/seq/0 \
     --create_on_open=0 --allow_file_create=0 --file_append=1 --unlink=0 \
-    --rw=write --ioengine=psync --iodepth=64 --max-jobs=8 \
+    --rw=write --ioengine=psync \
     --bs="$bs" --size="$sz" --verify=md5 --do_verify=1 \
     --continue_on_error=none --direct=1 || \
 	exit_failed "fio write FAILED"
