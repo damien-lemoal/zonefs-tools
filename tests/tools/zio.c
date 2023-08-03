@@ -29,6 +29,7 @@
 struct zio {
 	int nr;
 	void *buf;
+	struct iovec *iov;
         struct iocb iocb;
 };
 
@@ -40,15 +41,19 @@ struct zio_params {
 	int fd;
 
 	bool read;
+	bool iovec;
 	bool async;
 
 	int fflags;
 	bool append;
 	loff_t fsize;
 	loff_t fmaxsize;
+	size_t blksize;
 
 	size_t iosize;
 	loff_t ioofst;
+	unsigned int iovcnt;
+	unsigned int iovlen;
 	unsigned int ionum;
 	int ioflags;
 	unsigned int iodepth;
@@ -130,36 +135,38 @@ static int zio_run_sync(struct zio_params *zio)
 {
 	ssize_t ret;
 	loff_t ofst;
-	struct iovec iov = {
-		.iov_base = zio->io[0].buf,
-		.iov_len = zio->iosize,
-	};
 
 	while (!zio_done(zio)) {
-
 		if (zio->read) {
 			ofst = zio->ioofst;
-			ret = preadv2(zio->fd, &iov, 1, ofst, zio->ioflags);
+			ret = preadv2(zio->fd, zio->io[0].iov, zio->iovcnt,
+				      ofst, zio->ioflags);
 		} else {
 			if (zio->append)
 				ofst = 0;
 			else
 				ofst = zio->ioofst;
-			ret = pwritev2(zio->fd, &iov, 1, ofst, zio->ioflags);
+			ret = pwritev2(zio->fd, zio->io[0].iov, zio->iovcnt,
+				       ofst, zio->ioflags);
 		}
+
 		if (ret <= 0) {
-			fprintf(stderr, "%05u: %s %zu B at %ld failed %d (%s)\n",
+			fprintf(stderr,
+				"%05u: %s %zu B at %ld (%u vector%s) failed %d (%s)\n",
 				zio->nr_ios,
 				zio->read ? "READ" : "WRITE",
 				zio->iosize, zio->ioofst,
+				zio->iovcnt, zio->iovcnt > 1 ? "s" : "",
 				errno, strerror(errno));
 			return errno;
 		}
 
-		zio_vprintf(zio, "%05u: %s %zu B at %ld\n",
+		zio_vprintf(zio, "%05u: %s %zu B at %ld (%u vector%s) -> %zd B done\n",
 			    zio->nr_ios,
 			    zio->read ? "READ" : "WRITE",
-			    zio->iosize, zio->ioofst);
+			    zio->iosize, zio->ioofst,
+			    zio->iovcnt, zio->iovcnt > 1 ? "s" : "",
+			    ret);
 
 		zio->nr_ios++;
 		zio->ioofst += ret;
@@ -346,42 +353,57 @@ static void zio_cleanup(struct zio_params *zio)
 	}
 }
 
-static int zio_init(struct zio_params *zio, char *path)
+static int zio_init_io(struct zio_params *zio, int idx)
 {
-	struct stat st;
+	struct zio *io = &zio->io[idx];
 	unsigned int i;
+	size_t sz = zio->iosize;
 	int ret;
 
-	/* Allocate and initialize IO array */
-	zio->io = calloc(zio->iodepth, sizeof(struct zio));
-	if (!zio->io) {
-		fprintf(stderr, "No memory for IO array\n");
+	io->nr = -1;
+
+	ret = posix_memalign((void **) &io->buf, zio->blksize,
+			     zio->iovlen * zio->iovcnt * 2);
+	if (ret != 0) {
+		fprintf(stderr, "Allocate IO buffer failed %d (%s)\n",
+			-ret, strerror(-ret));
 		return -1;
 	}
 
-	for (i = 0; i < zio->iodepth; i++) {
-		zio->io[i].nr = -1;
-		ret = posix_memalign((void **) &zio->io[i].buf,
-				     sysconf(_SC_PAGESIZE), zio->iosize);
-		if (ret != 0) {
-			fprintf(stderr, "Allocate IO buffer failed %d (%s)\n",
-				-ret, strerror(-ret));
-			goto err;
+	/* Allocate and initialize iovec array */
+	io->iov = calloc(zio->iovcnt, sizeof(struct iovec));
+	if (!io->iov) {
+		fprintf(stderr, "No memory for iovec array\n");
+		return -1;
+	}
+
+	/* Create disjoint vectors */
+	for (i = 0; i < zio->iovcnt; i++) {
+		io->iov[i].iov_base = io->buf + zio->iovlen * i * 2;
+		if (sz >= zio->iovlen) {
+			io->iov[i].iov_len = zio->iovlen;
+			sz -= zio->iovlen;
+		} else {
+			io->iov[i].iov_len = sz;
+			sz = 0;
 		}
 	}
 
-	zio->iocbs = calloc(zio->iodepth, sizeof(struct iocb *));
-	if (!zio->iocbs) {
-		fprintf(stderr, "No memory for async IO array\n");
-		goto err;
-	}
+	return 0;
+}
+
+static int zio_init(struct zio_params *zio, char *path)
+{
+	unsigned int i;
+	struct stat st;
+	int ret;
 
 	/* Open file */
 	zio->fd = open(path, zio->fflags, 0);
 	if (zio->fd < 0) {
 		fprintf(stderr, "Open %s failed %d (%s)\n",
 			path, errno, strerror(errno));
-		goto err;
+		return -1;
 	}
 
 	ret = fstat(zio->fd, &st);
@@ -392,6 +414,7 @@ static int zio_init(struct zio_params *zio, char *path)
 	}
 	zio->fsize = st.st_size;
 	zio->fmaxsize = st.st_blocks << 9;
+	zio->blksize = st.st_blksize;
 
 	/* If we do append writes, set offset to EOF */
 	if (!zio->read) {
@@ -400,6 +423,32 @@ static int zio_init(struct zio_params *zio, char *path)
 			(zio->ioflags & RWF_APPEND) == RWF_APPEND;
 		if (zio->append)
 			zio->ioofst = zio->fsize;
+	}
+
+	/* Allocate and initialize IO array */
+	if (zio->iovec) {
+		zio->iovlen = sysconf(_SC_PAGESIZE);
+		zio->iovcnt = (zio->iosize + zio->iovlen - 1) / zio->iovlen;
+	} else {
+		zio->iovlen = zio->iosize;
+		zio->iovcnt = 1;
+	}
+	zio->io = calloc(zio->iodepth, sizeof(struct zio));
+	if (!zio->io) {
+		fprintf(stderr, "No memory for IO array\n");
+		goto err;
+	}
+
+	for (i = 0; i < zio->iodepth; i++) {
+		ret = zio_init_io(zio, i);
+		if (ret)
+			goto err;
+	}
+
+	zio->iocbs = calloc(zio->iodepth, sizeof(struct iocb *));
+	if (!zio->iocbs) {
+		fprintf(stderr, "No memory for async IO array\n");
+		goto err;
 	}
 
 	return 0;
@@ -419,6 +468,7 @@ static void zio_usage(char *cmd)
 	       "    --vv            : Very verbose output (IOs)\n"
 	       "    --read          : do read (default)\n"
 	       "    --write         : do write\n"
+	       "    --iovec         : Use disjoint vectored buffer\n"
 	       "    --size=<bytes>  : Do <bytes> sized IOs (default: 4096)\n"
 	       "    --ofst=<bytes>  : Start IOs at <offset> (default: 0)\n"
 	       "    --nio=<num>     : Do <num> IOs and exit\n"
@@ -453,6 +503,7 @@ int main(int argc, char **argv)
 	memset(&zio, 0, sizeof(struct zio_params));
 	zio.fd = -1;
 	zio.read = true;
+	zio.iovec = false;
 	zio.async = false;
 	zio.append = false;
 	zio.fflags = O_LARGEFILE;
@@ -482,6 +533,8 @@ int main(int argc, char **argv)
 		} else if (strcmp(argv[i], "--write") == 0) {
 			zio.read = false;
 			zio.fflags |= O_WRONLY;
+		} else if (strcmp(argv[i], "--iovec") == 0) {
+			zio.iovec = true;
 		} else if (strncmp(argv[i], "--size=", 7) == 0) {
 			arg = atol(argv[i] + 7);
 			if (arg <= 0) {
