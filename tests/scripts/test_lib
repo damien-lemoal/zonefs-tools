@@ -366,12 +366,19 @@ function file_size()
 function check_file_size()
 {
 	local file="$1"
-	local expected_fsz="$2"
-	local fsz
+	local efsz="$2"
+	local efsz2="$3"
+	local fsz=$(file_size "${file}")
 
-	fsz=$(file_size "${file}")
-	[[ "${fsz}" == "${expected_fsz}" ]] || \
-		exit_failed " --> Invalid file size ${fsz} B, expected ${expected_fsz} B"
+	if [ $# == 2 ]; then
+		[[ "${fsz}" == "${efsz}" ]] || \
+			exit_failed " --> Invalid file size ${fsz} B, expected ${efsz} B"
+		return 0
+	fi
+
+	if [ "${fsz}" != "${efsz}" ] && [ "${fsz}" != "${efsz2}" ]; then
+		exit_failed " --> Invalid file size ${fsz} B, expected ${efsz} or ${efsz2} B"
+	fi
 }
 
 function file_max_size()
@@ -608,12 +615,13 @@ function write_file_err()
 	local file="$1"
 	local sz=$2
 	local expected_fsz=$3
+	local expected_fsz2=$4
 
 	dd if=/dev/zero of="${file}" \
 		oflag=direct,append bs=${sz} count=1 \
 		conv=nocreat,notrunc && \
 		exit_failed " --> write ${sz} B to ${file} SUCCESS (should FAIL)"
-	check_file_size "${file}" ${expected_fsz}
+	check_file_size "${file}" ${expected_fsz} ${expected_fsz2}
 }
 
 function write_file_async_err()

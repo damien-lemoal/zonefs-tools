@@ -25,9 +25,13 @@ write_file "${zonefs_mntdir}/seq/0" 4096
 echo "Write seq file 0 zone directly"
 write_file_zone "$1" "${zonefs_mntdir}/seq/0"
 
-# Now, writing should fail
+# Now, writing should fail. For the expected file size, there are 2 cases:
+# 1) zonefs is doing regular writes: the expected file size is 4K x 2 as
+#    the write will fail.
+# 2) zonefs is doing zone append writes: the expected file size is 4K x 3 as
+#    the write will succeed.
 echo "Try writing seq file 0"
-write_file_err "${zonefs_mntdir}/seq/0" 4096 12288
+write_file_err "${zonefs_mntdir}/seq/0" 4096 8192 12288
 
 # File permission should not have changed and the file system
 # should still be usable
@@ -38,7 +42,7 @@ check_fs_is_writable
 # Evicting the inode should not change anything
 echo "Check file size and permissions after eviction"
 drop_inode_cache
-check_file_size "${zonefs_mntdir}/seq/0" 12288
+check_file_size "${zonefs_mntdir}/seq/0" 8192 12288
 check_file_perm "${zonefs_mntdir}/seq/0" "640"
 
 # We should still be able to read the file
