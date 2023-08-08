@@ -29,7 +29,7 @@ sz=$(file_size "$zonefs_mntdir"/seq/0)
 	exit_failed " --> Invalid file size $sz B, expected $seq_file_0_max_size B"
 
 # Test with RWF_DSYNC I/O flag
-echo "Check writes with RWF_APPEND"
+echo "Check writes with RWF_DSYNC"
 
 truncate --no-create --size=0 "$zonefs_mntdir"/seq/0 || \
         exit_failed " --> FAILED"
