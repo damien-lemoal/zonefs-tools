@@ -702,7 +702,7 @@ function set_dm_io_scheduler()
 			return 1
 		fi
 		echo "${sched}" > "${path}"
-	done < <(dmsetup table "$(<"/sys/block/$dev/dm/name")" |
+	done < <(dmsetup table "$(<"/sys/block/$bdev/dm/name")" |
 			 sed -n  's/.* \([0-9]*:[0-9]*\).*/\1/p')
 }
 
@@ -744,6 +744,7 @@ function set_io_scheduler()
 		( dev_has_dm_map "$bdev" linear || dev_has_dm_map "$bdev" flakey ||
 		  dev_has_dm_map "$bdev" crypt ); then
 		set_dm_io_scheduler "${bdev}" "${sched}"
+		return 0
 	fi
 
 	echo "Failed to set I/O scheduler"
