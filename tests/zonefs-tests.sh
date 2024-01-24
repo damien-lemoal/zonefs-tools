@@ -379,6 +379,8 @@ echo "${passed} / ${nrtests} tests passed (${skipped} skipped, ${failed} failure
 # End logging the run
 } | tee -i "${runlog}" 2>&1
 
+failed=$(grep -Po "skipped, \K[0-9]*" "${runlog}")
+
 umount "$zonefs_mntdir" >> /dev/null 2>&1
 rm -rf "$zonefs_mntdir" >> /dev/null 2>&1
 rm -f local-* >> /dev/null 2>&1
