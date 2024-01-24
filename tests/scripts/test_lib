@@ -62,6 +62,11 @@ function get_zone_append_max_bytes()
 	cat "/sys/class/block/$(devname $1)/queue/zone_append_max_bytes"
 }
 
+function get_logical_block_size()
+{
+	cat "/sys/class/block/$(devname $1)/queue/logical_block_size"
+}
+
 function get_max_open_zones()
 {
 	local bdev="$(devname $1)"
