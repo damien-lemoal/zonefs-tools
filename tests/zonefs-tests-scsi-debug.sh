@@ -10,7 +10,7 @@ zone_size=64
 zone_capacity=$zone_size
 
 # Device total capacity (MB)
-capacity=1024
+capacity=2048
 
 # Sector size
 sect_size=512
