@@ -572,6 +572,42 @@ function require_nullb_offline()
 	[[ ${have_zone_offline} -eq 0 ]] && exit_skip "null_blk does not support zone_offline config"
 }
 
+function require_write_mounted_dev()
+{
+	local dev="$1"
+	local ofst
+
+	cfg="/boot/config-$(uname -r)"
+	if [ -f "${cfg}" ]; then
+		dwm="$(grep CONFIG_BLK_DEV_WRITE_MOUNTED "${cfg}")"
+		echo "### ${dwm}"
+		[[ "${dwm}" == "CONFIG_BLK_DEV_WRITE_MOUNTED=n" ]] && \
+			exit_skip "Writing to mounted block devices is not allowed"
+		return 0
+	fi
+
+	cfg="/proc/config.gz"
+	if [ -f "${cfg}" ]; then
+		dwm="$(zcat "${cfg}" | grep CONFIG_BLK_DEV_WRITE_MOUNTED)"
+		[[ "${dwm}" == "CONFIG_BLK_DEV_WRITE_MOUNTED=n" ]] && \
+			exit_skip "Writing to mounted block devices is not allowed"
+		return 0
+	fi
+
+	# Fallback to trying if we can write the device while it is mounted
+	zonefs_mkfs "${dev}"
+	zonefs_mount "${dev}"
+
+	ofst=$(( (2 * zone_bytes) / 4096 ))
+
+	dd if=/dev/zero of="${dev}" \
+		oflag=direct bs=4096 count=1 seek=${ofst} \
+		conv=nocreat,notrunc
+	ret=$?
+	zonefs_umount
+
+	[[ ${ret} -eq 0 ]] || exit_skip "Writing to mounted block devices is not allowed"
+}
 
 function set_nullb_first_seq_zone_readonly()
 {

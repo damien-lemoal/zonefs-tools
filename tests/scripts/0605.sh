@@ -14,6 +14,8 @@ fi
 
 echo "Check handling of sequential file write IO error"
 
+require_write_mounted_dev "$1"
+
 zonefs_mkfs "$1"
 zonefs_mount "-o errors=zone-offline $1"
 
