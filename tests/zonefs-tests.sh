@@ -364,7 +364,7 @@ for ((r=1; r<=${nrloops}; r++)); do
 
 	if [ ${nrloops} -ne 1 ]; then
 		echo ""
-		echo "Run ${r}:"
+		echo "Run ${r}/${nrloops}:"
 	fi
 
 	nrtests=$(( nrtests + ${#tests[@]}))
