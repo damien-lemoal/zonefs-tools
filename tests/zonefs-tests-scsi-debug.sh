@@ -21,10 +21,12 @@ nr_conv=3
 function usage() {
 	echo "Usage: $0 [options]"
 	echo "Options:"
-	echo "    -h | --help              : Display help"
-	echo "    -c | --cap               : Test with zone capacity < zone size (default: off)"
-	echo "    -n | --nr_conv <nr conv> : Specify the number of conventional zones to use."
-	echo "    -t <test num>            : Test to execute. Can be specified multiple times."
+	echo "  -h | --help              : Display help"
+	echo "  -c | --cap               : Test with zone capacity < zone size (default: off)"
+	echo "  -n | --nr_conv <nr conv> : Specify the number of conventional zones to use."
+	echo "  -t <test num>            : Test to execute. Can be specified multiple times."
+	echo "  -r <num>                 : Repeat the selected test cases <num> times"
+	echo "                             (default: num=1)"
 }
 
 # Check credentials
@@ -54,6 +56,11 @@ while [[ $# -gt 0 ]]; do
 		"-t")
 			shift
 			testopts+=" -t $1"
+			shift
+			;;
+		"-r")
+			shift
+			testopts+=" -r $1"
 			shift
 			;;
                 *)

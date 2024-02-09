@@ -25,12 +25,14 @@ nr_conv=10
 function usage() {
 	echo "Usage: $0 [options]"
 	echo "Options:"
-	echo "    -h | --help          : Display help"
-	echo "    -c | --cap           : Test with zone capacity < zone size (default: off)"
-	echo "    -n | --nr_conv <n>   : Specify the number of conventional zones to use."
-	echo "    -s | --sectsz <sz B> : Test with device block size set to <sz> bytes (default: 512 B)"
-	echo "    -t <test num> : Test to execute. Can be specified multiple times."
-	echo "                    If used, only the first nullb config is used"
+	echo "  -h | --help          : Display help"
+	echo "  -c | --cap           : Test with zone capacity < zone size (default: off)"
+	echo "  -n | --nr_conv <n>   : Specify the number of conventional zones to use."
+	echo "  -s | --sectsz <sz B> : Test with device block size set to <sz> bytes (default: 512 B)"
+	echo "  -t <test num>        : Test to execute. Can be specified multiple times."
+	echo "                         If used, only the first nullb config is used"
+	echo "  -r <num>             : Repeat the selected test cases <num> times"
+	echo "                         (default: num=1)"
 }
 
 # Check credentials
@@ -65,6 +67,11 @@ while [[ $# -gt 0 ]]; do
 		"-t")
 			shift
 			testopts+=" -t $1"
+			shift
+			;;
+		"-r")
+			shift
+			testopts+=" -r $1"
 			shift
 			;;
                 *)

@@ -37,6 +37,8 @@ function usage()
 	echo "                        multiple times."
 	echo "  -s                  : Short test (do not execute tests that take a"
 	echo "                        long time)"
+	echo "  -r <num>            : Repeat the selected test cases <num> times"
+	echo "                        (default: num=1)"
 	echo "  -h, --help          : This help message"
 }
 
@@ -73,6 +75,7 @@ declare -a tests
 declare list=false
 logdir=""
 export short=false
+declare nrloops=1
 
 # Get full test list
 declare -a testlist
@@ -135,6 +138,11 @@ while [ "${1#-}" != "$1" ]; do
 		short=true
 		shift
 		;;
+	-r)
+		nrloops="$2"
+		shift
+		shift
+		;;
 	-*)
 		echo "unknow option $1"
 		exit 1
@@ -160,6 +168,12 @@ if $list; then
 		echo "  Test $(test_num "$t"): $( $t )"
 	done
 	exit 0
+fi
+
+# Check number of loops
+if [ ${nrloops} -eq 0 ]; then
+	echo "Invalid number of repetitions"
+	exit 1
 fi
 
 dev="$1"
@@ -337,40 +351,62 @@ echo "  $nr_zones zones ($nr_cnv_zones conventional zones, $nr_seq_zones sequent
 echo "  $zone_sectors 512B sectors zone size ($(( zone_bytes / 1048576 )) MiB)"
 echo "  $(get_max_open_zones $dev) max open zones"
 echo "  $(get_max_active_zones $dev) max active zones"
-echo "Running tests"
 
-nrtests=${#tests[@]}
+if [ ${nrloops} -eq 1 ]; then
+	echo "Running tests"
+else
+	echo "Running tests ${nrloops} times"
+fi
 
-for t in "${tests[@]}"; do
-	tnum="$(test_num $t)"
+nrtests=0
 
-	echo -n "  Test ${tnum}: "
-	printf "%-60s ... " "$( $t )"
+for ((r=1; r<=${nrloops}; r++)); do
 
-	run_test "$t" "$1" > "${logdir}/${tnum}.log" 2>&1
-	ret=$?
-	if [ "$ret" == 0 ]; then
-		status="\e[92mPASS\e[0m"
-		((passed++))
-	elif [ "$ret" == 2 ]; then
-		status="skip"
-		((skipped++))
-	else
-		status="\e[31mFAIL\e[0m"
-		((failed++))
+	if [ ${nrloops} -ne 1 ]; then
+		echo "Run ${r}:"
 	fi
 
-	echo -e "$status"
+	nrtests=$(( nrtests + ${#tests[@]}))
 
-	if [ -f "${logdir}/.zonefs_test_nullbn" ]; then
-		destroy_nullb "$(cat ${logdir}/.zonefs_test_nullbn)"
-	fi
+	for t in "${tests[@]}"; do
+		tnum="$(test_num $t)"
+
+		echo -n "  Test ${tnum}: "
+		printf "%-60s ... " "$( $t )"
+
+		run_test "$t" "$1" > "${logdir}/${tnum}.log" 2>&1
+		ret=$?
+		if [ "$ret" == 0 ]; then
+			status="\e[92mPASS\e[0m"
+			((passed++))
+		elif [ "$ret" == 2 ]; then
+			status="skip"
+			((skipped++))
+		else
+			status="\e[31mFAIL\e[0m"
+			((failed++))
+		fi
+
+		echo -e "$status"
+
+		if [ -f "${logdir}/.zonefs_test_nullbn" ]; then
+			destroy_nullb "$(cat ${logdir}/.zonefs_test_nullbn)"
+		fi
+
+		if [ "$aborted" == 1 ]; then
+			break
+		fi
+
+		na=0
+	done
 
 	if [ "$aborted" == 1 ]; then
 		break
 	fi
 
-	na=0
+	if [ ${nrloops} -ne 1 ] && [ ${r} -ne ${nrloops} ]; then
+		echo ""
+	fi
 done
 
 echo ""
