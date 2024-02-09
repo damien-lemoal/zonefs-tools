@@ -363,6 +363,7 @@ nrtests=0
 for ((r=1; r<=${nrloops}; r++)); do
 
 	if [ ${nrloops} -ne 1 ]; then
+		echo ""
 		echo "Run ${r}:"
 	fi
 
@@ -402,10 +403,6 @@ for ((r=1; r<=${nrloops}; r++)); do
 
 	if [ "$aborted" == 1 ]; then
 		break
-	fi
-
-	if [ ${nrloops} -ne 1 ] && [ ${r} -ne ${nrloops} ]; then
-		echo ""
 	fi
 done
 
