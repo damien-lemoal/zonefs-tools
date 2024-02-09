@@ -17,12 +17,18 @@ echo "Check sequential file unaligned write (sync IO)"
 zonefs_mkfs "$1"
 zonefs_mount "$1"
 
-dd if=/dev/zero of="$zonefs_mntdir"/seq/0 bs=4096 count=1 seek=1 && \
+dd if=/dev/zero of="$zonefs_mntdir"/seq/0 oflag=direct \
+	bs=4096 count=1 seek=1 && \
 	exit_failed " --> SUCCESS (should FAIL)"
 
 sz=$(file_size "$zonefs_mntdir"/seq/0)
 [ "$sz" != "0" ] && \
 	exit_failed " --> Invalid file size $sz B, expected 0 B"
+
+# The file should still be writable
+dd if=/dev/zero of="$zonefs_mntdir"/seq/0 oflag=direct \
+	bs=4096 count=1 conv=notrunc || \
+	exit_failed " --> FAILED (should SUCCEED)"
 
 zonefs_umount
 
