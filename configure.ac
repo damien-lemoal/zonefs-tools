@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2019 Western Digital Corporation or its affiliates.
 
-AC_INIT([zonefs-tools], [1.6.0], [damien.lemoal@wdc.com])
+AC_INIT([zonefs-tools], [1.6.0], [dlemoal@kernel.org])
 
 AC_PREFIX_DEFAULT(/usr)
 AC_CONFIG_HEADERS([src/config.h])
