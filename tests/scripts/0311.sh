@@ -26,8 +26,11 @@ truncate --no-create --size=0 "$zonefs_mntdir"/seq/0 || \
 pbs=$(block_size "$1")
 mask=$(($pbs - 1))
 
-bs=$(get_zone_append_max_bytes "$1")
+bs=$(get_write_max_bytes "$1")
 bs=$(($bs + $pbs))
+if [ ${bs} -gt ${sz} ]; then
+	bs=${sz}
+fi
 bs=$((($bs + $mask) & ~$mask))
 
 echo "Using ${bs} IO size"

@@ -62,6 +62,13 @@ function get_zone_append_max_bytes()
 	cat "/sys/class/block/$(devname $1)/queue/zone_append_max_bytes"
 }
 
+function get_write_max_bytes()
+{
+	local maxkb=$(cat "/sys/class/block/$(devname $1)/queue/max_hw_sectors_kb")
+
+	echo $(( maxkb * 1024 ))
+}
+
 function get_logical_block_size()
 {
 	cat "/sys/class/block/$(devname $1)/queue/logical_block_size"
