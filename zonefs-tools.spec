@@ -1,5 +1,5 @@
-Name:		zonefs-tools
-Version:	1.6.0
+Name:		%{pkg_name}
+Version:	%{pkg_version}
 Release:	1%{?dist}
 Summary:	Provides user utilities for the zonefs file system
 
