@@ -26,7 +26,6 @@ function usage() {
 	echo "Usage: $0 [options]"
 	echo "Options:"
 	echo "  -h | --help          : Display help"
-	echo "  -c | --cap           : Test with zone capacity < zone size (default: off)"
 	echo "  -n | --nr_conv <n>   : Specify the number of conventional zones to use."
 	echo "  -s | --sectsz <sz B> : Test with device block size set to <sz> bytes (default: 512 B)"
 	echo "  -t <test num>        : Test to execute. Can be specified multiple times."
@@ -49,10 +48,6 @@ while [[ $# -gt 0 ]]; do
 		"-h" | "--help")
 			usage "$0"
 			exit 0
-                        ;;
-		"-c" | "--cap")
-			zone_capacity=$(( zone_size - 1 ))
-                        shift
                         ;;
 		"-n" | "--nr_conv")
 			shift
@@ -98,7 +93,7 @@ scriptdir="$(cd "$(dirname "$0")" && pwd)"
 
 modprobe null_blk nr_devices=0
 
-nr_configs=5
+nr_configs=6
 
 function set_config()
 {
@@ -122,6 +117,11 @@ function set_config()
 		"4")
 			capacity=$(( capacity + zone_size / 2 + 1 ))
 			nr_conv=0
+			zone_max_open=$(( capacity / zone_size / 8 ))
+			zone_max_active=$(( capacity / zone_size / 8 + 1 ))
+                        ;;
+		"5")
+			zone_capacity=$(( zone_size - 1 ))
 			zone_max_open=$(( capacity / zone_size / 8 ))
 			zone_max_active=$(( capacity / zone_size / 8 + 1 ))
                         ;;
