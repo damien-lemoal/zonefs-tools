@@ -188,7 +188,7 @@ function destroy_zoned_nullb()
 	if [ -e "/sys/kernel/config/nullb/$ndev" ]; then
 		echo "0" > /sys/kernel/config/nullb/$ndev/power
 	fi
-	rmdir /sys/kernel/config/nullb/$ndev > /dev/null 2&>1
+	rmdir /sys/kernel/config/nullb/$ndev > /dev/null 2>&1
 }
 
 declare -i rc=0
