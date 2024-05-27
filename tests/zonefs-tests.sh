@@ -263,6 +263,9 @@ export nr_seq_files
 export seq_file_0_zone_start_sector
 export seq_file_0_max_size=$(get_zone_capacity_bytes "$dev" $seq_file_0_zone_start_sector)
 
+export zone_cap_sectors=$(( seq_file_0_max_size / 512 ))
+export zone_cap_bytes=${seq_file_0_max_size}
+
 # zonefs features
 zonefs_module=$(modprobe -c | grep -c zonefs)
 if [ $zonefs_module != 0 ]; then
@@ -349,6 +352,7 @@ runlog="${logdir}/zonefs-tests.log"
 echo "zonefs-tests on $dev:"
 echo "  $nr_zones zones ($nr_cnv_zones conventional zones, $nr_seq_zones sequential zones)"
 echo "  $zone_sectors 512B sectors zone size ($(( zone_bytes / 1048576 )) MiB)"
+echo "  $zone_cap_sectors 512B sectors zone capacity ($(( zone_cap_bytes / 1048576 )) MiB)"
 echo "  $(get_max_open_zones $dev) max open zones"
 echo "  $(get_max_active_zones $dev) max active zones"
 
@@ -425,6 +429,8 @@ unset logdir
 unset nr_zones
 unset zone_sectors
 unset zone_bytes
+unset zone_cap_sectors
+unset zone_cap_bytes
 unset nr_cnv_zones
 unset nr_seq_zones
 unset total_usable_sectors
