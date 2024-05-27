@@ -108,22 +108,22 @@ function set_config()
 			zone_max_active=0
                         ;;
 		"1")
-			zone_max_open=$(( $capacity / $zone_size / 8 ))
+			zone_max_open=$(( capacity / zone_size / 8 ))
 			zone_max_active=0
                         ;;
 		"2")
 			zone_max_open=0
-			zone_max_active=$(( $capacity / $zone_size / 8 + 1 ))
+			zone_max_active=$(( capacity / zone_size / 8 + 1 ))
                         ;;
 		"3")
-			zone_max_open=$(( $capacity / $zone_size / 8 ))
-			zone_max_active=$(( $capacity / $zone_size / 8 + 1 ))
+			zone_max_open=$(( capacity / zone_size / 8 ))
+			zone_max_active=$(( capacity / zone_size / 8 + 1 ))
                         ;;
 		"4")
 			capacity=$(( capacity + zone_size / 2 + 1 ))
 			nr_conv=0
-			zone_max_open=$(( $capacity / $zone_size / 8 ))
-			zone_max_active=$(( $capacity / $zone_size / 8 + 1 ))
+			zone_max_open=$(( capacity / zone_size / 8 ))
+			zone_max_active=$(( capacity / zone_size / 8 + 1 ))
                         ;;
                 *)
 			echo "Invalid configuration"
@@ -185,8 +185,10 @@ function destroy_zoned_nullb()
 {
         local ndev="$1"
 
-	echo 0 > /sys/kernel/config/nullb/$ndev/power
-	rmdir /sys/kernel/config/nullb/$ndev
+	if [ -e "/sys/kernel/config/nullb/$ndev" ]; then
+		echo "0" > /sys/kernel/config/nullb/$ndev/power
+	fi
+	rmdir /sys/kernel/config/nullb/$ndev > /dev/null 2&>1
 }
 
 declare -i rc=0
@@ -201,6 +203,11 @@ for (( m=0; m<$nr_configs; m++ )); do
 	set_config "$m"
 
 	ndev=$(create_zoned_nullb)
+	if [ ! -b "/dev/${ndev}" ]; then
+		echo "Create null block device failed"
+		exit 1
+	fi
+
 	moz=$(cat /sys/block/"$ndev"/queue/max_open_zones)
 	maz=$(cat /sys/block/"$ndev"/queue/max_active_zones)
 	nrz=$(blkzone report "/dev/$ndev" | wc -l)
