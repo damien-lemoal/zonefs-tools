@@ -20,6 +20,9 @@ zonefs_mount "$1"
 echo "Fill sequential file"
 
 bs=$(( 4 * 1024 * 1024 ))
+if [ ${bs} -gt ${zone_cap_bytes} ]; then
+	bs=${zone_cap_bytes}
+fi
 if [ ${bs} -lt ${seq_file_0_max_size} ]; then
 	bs=${seq_file_0_max_size}
 fi
