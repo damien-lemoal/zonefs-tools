@@ -121,6 +121,7 @@ function set_config()
 			zone_max_active=$(( capacity / zone_size / 8 + 1 ))
                         ;;
 		"5")
+			capacity=2048
 			zone_capacity=$(( zone_size - 1 ))
 			zone_max_open=$(( capacity / zone_size / 8 ))
 			zone_max_active=$(( capacity / zone_size / 8 + 1 ))
