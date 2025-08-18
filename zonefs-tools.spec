@@ -39,5 +39,5 @@ sh autogen.sh
 %doc README.md CONTRIBUTING
 
 %changelog
-* Tue Jan 31 2023 Damien Le Moal <damien.lemoal@wdc.com> 1.6.0-1
-- Version 1.6.0 initial package
+* Mon Aug 18 2025 Damien Le Moal <dlemoal@kernel.org> 1.7.0-1
+- Version 1.7.0 initial package
