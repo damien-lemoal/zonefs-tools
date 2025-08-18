@@ -39,11 +39,11 @@ Display a short usage message and return
 
 .TP
 .BI \-v
-Verbose output
+Enable verbose output.
 
 .TP
 .BI \-f
-Overwrite existing file system format on the device
+Overwrite existing file system format on the device.
 
 .TP
 .BI \-L " label"
@@ -57,13 +57,15 @@ argument using the equal ("=") sign. The following features are supported.
 .TP
 .BR aggr_cnv
 Aggregate contiguous conventional zones into a single file.
-Default: off (create one file per zone).
+Default: disabled (create one file per zone).
 .TP
 .BR uid =\fIUID\fR
-Create files with \fIUID\fR as owner user. The default is "root" user (UID 0).
+Create files with \fIUID\fR as the owner user. The default is the "root" user
+(UID 0).
 .TP
 .BR gid =\fIGID\fR
-Create files with \fIGID\fR as group owner. The default is "root" group (GID 0).
+Create files with \fIGID\fR as the group owner. The default is the "root" group
+(GID 0).
 .TP
 .BR perm =\fIpermissions\fR
 Create files with \fIpermissions\fR as access rights. The default is "640".
