@@ -1,0 +1,287 @@
+.\"  SPDX-License-Identifier: GPL-2.0-or-later
+.\"
+.\"  Copyright (C) 2019, Western Digital Corporation or its affiliates.
+.\"  Written by Damien Le Moal <damien.lemoal@wdc.com>
+.\"
+.TH zonefs 5
+.SH NAME
+zonefs \- layout and mount options for the zonefs filesystem
+
+.SH DESCRIPTION
+zonefs is a very simple file system exposing each zone of a zoned block device
+as a file. Unlike a regular POSIX-compliant file system with native zoned block
+device support (e.g XFS or BTRFS), zonefs does not hide the sequential write
+constraint of zoned block devices to the user. Files representing sequential
+write required zones of the device must be written sequentially starting from
+the end of the file (append only writes) and can be written only as long as the
+zone is not full (i.e. the file size is less than the zone capacity).
+.PP
+As such, zonefs is in essence closer to a raw block device access interface
+than to a full-featured POSIX file system. The goal of zonefs is to simplify
+the implementation of zoned block device support in applications by replacing
+raw block device file accesses with a richer file API, avoiding relying on
+direct block device file ioctls which are less developer firendly. One example
+of this approach is the implementation of LSM (log-structured merge) tree
+structures (such as used in RocksDB and LevelDB) on zoned block devices by
+allowing SSTables to be stored in a zone file similarly to a regular file
+system rather than as a range of sectors of the entire disk. The introduction
+of the higher level construct "one file is one zone" can help reducing the
+amount of changes needed in the application to support zoned block devices, as
+well as facilitating support for different application programming languages.
+.PP
+Zoned storage devices belong to a class of storage devices with an address
+space that is divided into zones. A zone is a group of consecutive LBAs and all
+zones are contiguous (there are no LBA gaps). Zones may have different types.
+.TP
+.B Conventional zones
+There is no access constraint to LBAs belonging to conventional zones. Any read
+or write access can be executed, like with a regular block device.
+.TP
+.B Sequential zones
+These zones accept random reads but must be written sequentially. Each
+sequential zone has a write pointer maintained by the device that keeps track
+of the mandatory start LBA position of the next write to the device. As a
+result of this write constraint, LBAs in a sequential zone cannot be
+overwritten. Sequential zones must first be erased using a special command
+(zone reset) before rewriting.
+.PP
+Zoned storage devices can be implemented using various recording and media
+technologies. The most common form of zoned storage today uses the SCSI Zoned
+Block Commands (ZBC) and Zoned ATA Commands (ZAC) interfaces on Shingled
+Magnetic Recording (SMR) HDDs. NVMe Solid State Disks (SSD) storage devices
+also define a zoned interface with the Zoned NameSpace (ZNS) feature set.
+
+.SH ON-DISK FORMAT
+Zonefs exposes the zones of a zoned block device as files. The files
+representing zones are grouped by zone type, which are themselves represented
+by sub-directories. This file structure is built entirely using zone
+information provided by the device and so does not require any on-disk
+metadata beside a super block which is used to identify that the zoned device
+was formatted with zonefs.
+.PP
+zonefs super block is always written on the device at sector 0. The first zone
+of the device storing the super block is never exposed as a file by zonefs. If
+the zone containing the super block is a sequential zone, the
+.BR mkzonefs (8)
+tool always "finishes" the zone, that is, it transitions the zone to a full
+state to make it read-only, preventing any data write.
+
+.SH FILE SYSTEM TREE STRUCTURE
+Files representing zones of the same type are grouped together under the same
+sub-directory automatically created on mount.
+.PP
+For conventional zones, the sub-directory \fBcnv\fR is used. This directory is
+however created if and only if the device has usable conventional zones. If
+the device only has a single conventional zone at sector 0, the zone will not
+be exposed as a file as it will be used to store the zonefs super block. For
+such devices, the \fBcnv\fR sub-directory will not be created.
+.PP
+For sequential write required zones, the sub-directory \fBseq\fR is used.
+.PP
+These two directories are the only directories that exist in zonefs. Users
+cannot create other directories and cannot rename nor delete the \fBcnv\fR and
+\fBseq\fR sub-directories. The size of the directories indicated by the
+\fIst_size\fR field of \fIstruct stat\fR, obtained with the \fBstat (2)\fR or
+\fB fstat (2)\fR system calls, indicates the number of files existing under the
+directory.
+.PP
+Zone files are named using the number of the zone they represent within the set
+of zones of a particular type. That is, both the \fBcnv\fR and \fBseq\fR
+directories contain files named \fB0\fR, \fB1\fR, \fB2\fR, etc.
+.PP
+All read and write operations to zone files are not allowed beyond the file
+maximum size, that is, beyond the zone capacity. Any access exceeding the zone
+capacity is failed with the \fB\-EFBIG\fR error.
+.PP
+Creating, deleting, renaming or modifying any attribute of files and
+sub-directories is not allowed.
+.PP
+The number of blocks of a file as reported by stat() and fstat() indicates the
+capacity of the zone file, or in other words, the maximum file size.
+.TP
+.B Conventional Zone Files
+The size of conventional zone files is fixed to the size of the zone they
+represent. Conventional zone files cannot be truncated.
+.sp
+These files can be randomly read and written using any type of I/O operation.
+Buffered I/Os, direct I/Os, memory mapped I/Os (mmap), are all accepted. There
+is no I/O constraint for these files beside the file size limit mentioned above.
+.TP
+.B Sequential Zone Files
+The size of sequential zone files grouped in the \fBseq\fR sub-directory
+represents the write pointer position relative to the zone start sector of the
+file zone.
+.sp
+Sequential zone files can only be written sequentially, starting from the file
+end, that is, write operations can only be append writes. zonefs makes no
+attempt at accepting random writes and will fail any write request that has a
+start offset not corresponding to the end of the file, or to the end of the last
+write issued and still in-flight (for asynchronous I/O operations).
+.sp
+Since dirty page writeback by the kernel page cache does not guarantee a
+sequential write pattern, zonefs does not allow buffered writes and writeable
+mappings of sequential files. Only direct I/O writes are accepted for these
+files. There is no restriction on the type of I/O for reading sequential zone files.
+Buffered I/Os, direct I/Os and read mappings are all accepted.
+.sp
+Truncating sequential zone files is allowed only down to 0, in which case, the
+file zone is reset to rewind the zone write pointer position to the start of
+the zone, or up to the zone capacity, in which case the file's zone is
+transitioned to the FULL state (using a finish zone operation).
+
+.SH I/O ERROR HANDLING
+Zoned block devices may fail I/O requests for reasons similar to regular block
+devices, e.g. due to bad sectors. However, in addition to such common I/O
+failure pattern, the standards governing zoned block devices behavior define
+additional conditions that can result in I/O errors.
+.TP
+.B Read-Only Zone
+A zone may transition to the read-only condition (BLK_ZONE_COND_READONLY).
+While the data already written in the zone is still readable, the zone can
+no longer be written. No user action on the zone (zone management command or
+read/write access) can change the zone condition back to a normal read/write
+state. While the reasons for the device to transition a zone to read-only
+state are not defined by the standards, a typical cause for such transition
+is a defective write head on an HDD (all zones under this head are changed to
+read-only).
+.TP
+.B Offline Zone
+A zone may transition to the offline condition (BLK_ZONE_COND_OFFLINE).
+An offline zone cannot be read nor written. No user action can transition an
+offline zone back to an operational good state. Similarly to zone read-only
+transitions, the reasons for a drive to transition a zone to the offline
+condition are undefined. A typical cause is a defective read-write head on an
+HDD causing all zones on the platter under the broken head to be inaccessible.
+.TP
+.B Unaligned Write Error
+This error occurs when the host issues write requests with a start sector that
+does not correspond to a zone write pointer position when the write request is
+executed by the device. Even though zonefs enforces sequential file write for
+sequential zones, unaligned write errors may still happen in the case of a
+partial failure of a very large direct I/O operation split into multiple
+BIOs/requests or asynchronous I/O operations. If one of the write request
+within the set of sequential write requests issued to the device fails, all
+write requests queued after it will become unaligned and fail.
+.TP
+.B Delayed Write Error
+Similar to regular block devices, if the device side write cache is enabled,
+write errors may occur in ranges of previously completed writes when the device
+write cache is flushed, e.g. on \fBfsync (2)\fR. Similar to the unaligned write
+error case, delayed write errors can propagate through a stream of cached
+sequential data for a zone causing all data to be dropped after the sector that
+caused the error.
+.PP
+All I/O errors detected by zonefs are notified to the user with an error code
+return for the system call that triggered or detected the error. The recovery
+actions taken by zonefs in response to I/O errors depend on the I/O type (read
+vs write) and on the reason for the error (bad sector, unaligned writes or zone
+condition change).
+.PP
+For read I/O errors, zonefs does not execute any particular recovery action,
+but only if the file zone is still in a good condition and there is no
+inconsistency between the file inode size and its zone write pointer position.
+If a problem is detected, I/O error recovery is executed according to the error
+recovery mode enabled on mount (see below). For write I/O errors, zonefs I/O
+error recovery is always executed. A zone condition change to read-only or
+offline also always triggers zonefs I/O error recovery.
+
+.SH MOUNT OPTIONS
+The following zonefs specific mount options may be used when mounting a zonefs
+file system.
+.TP
+.B errors=value
+This mount option allows the user to specify zonefs behavior in response to I/O
+errors, inode size inconsistencies or zone condition changes.
+.sp
+\fBerrors=remount-ro\fR
+This is the default zonefs beahvior. If used, a zonefs file system will be
+changed to be read-only whenever an I/O error occurs. No attempt to correct the
+error will be made by zonefs.
+.sp
+\fBerror=zone-ro\fR
+With this mode, zonefs will set the file of a zone that was the target of a
+failed I/O to be read-only and correct the file size to ensure that only good
+data (data known to have been previously successfully written) can be accessed.
+.sp
+\fBerror=zone-offline\fR
+With this mode, zonefs will treat all I/O errors as if due to a file zone
+transitioning to an offline state, that is, the file for the zone that was the
+target of a failed I/O will not be readable nor writable after the I/O error.
+.sp
+\fBerror=repair\fR
+With this mode, zonefs will attempt to correct all I/O errors without
+restricting access to zone files if possible. This implies that the size of
+zone files may change after an I/O error.
+.sp
+Mount time I/O errors will cause the mount operation to fail. The handling of
+read-only zones also differs between mount-time and run-time. If a read-only
+zone is found at mount time, the zone is always treated in the same manner as
+offline zones, that is, all accesses are disabled and the zone file size set to
+0. This is necessary as the write pointer of read-only zones is defined as
+being invalid, making it impossible to discover the amount of data that has
+been written to the zone. In the case of a read-only zone discovered at
+run-time, the size of the zone file is left unchanged from its last updated
+value.
+.TP
+.B explicit\-open
+A zoned block device (e.g. an NVMe Zoned Namespace device) may have limits on
+the number of zones that can be active, that is, zones that are in the
+implicit open, explicit open or closed conditions. This potential limitation
+translates into a risk for applications to see write IO errors due to this
+limit being exceeded if the zone of a file is not already active when a write
+request is issued by the user.
+.sp
+To avoid these potential errors, the \fBexplicit\-open\fB mount option forces
+zones to be made active using an open zone command when a file is opened for
+writing for the first time. If the zone open command succeeds, the application
+is then guaranteed that write requests can be processed. Conversely, the
+\fBexplicit\-open\fR mount option will result in a zone close command being
+issued to the device on the last \fBclose (2)\fR of a zone file if the zone is
+not full nor empty.
+
+.SH RUNTIME SYSFS ATTRIBUTES
+zonefs defines several sysfs attributes for mounted file systems. All
+attributes are user readable and can be found in the directory
+\fB/sys/fs/zonefs/<dev>/\fR, where \fB<dev>\fR is the name of the mounted zoned
+block device.
+.PP
+The following attributes are defined.
+.TP
+.B max\_wro\_seq\_files
+This attribute reports the maximum number of sequential zone files that can be
+open for writing. This number corresponds to the maximum number of explicitly
+or implicitly open zones that the device supports. A value of 0 means that the
+device has no limit and that any zone (any file) can be open for writing and
+written at any time, regardless of the state of other zones. When the
+\fBexplicit\-open\fR mount option is used, zonefs will fail any open() system
+call requesting to open a sequential zone file for writing when the number of
+sequential zone files already open for writing has reached the
+\fBmax_wro_seq_files\fR limit.
+.TP
+.B nr\_wro\_seq\_files
+This attribute reports the current number of sequential zone files open for
+writing. When the \fBexplicit\-open\fR mount option is used, this number can
+never exceed \fBmax_wro_seq_files\fR. If the \fBexplicit\-open\fR mount option
+is not used, the reported number can be greater than \fBmax_wro_seq_files\fR.
+In such case, it is the responsibility of the application to not write
+simultaneously more than \fBmax_wro_seq_files\fB sequential zone files. Failure
+to do so can result in write errors.
+.TP
+.B max_active_seq_files
+This attribute reports the maximum number of sequential zone files that are in
+an active state, that is, sequential zone files that are partially written (not
+empty nor full) or that have a zone that is explicitly open (which happens only
+if the \fBexplicit\-open\fR mount option is used). This number is always equal
+to the maximum number of active zones that the device supports. A value of 0
+means that the mounted device has no limit on the number of sequential zone
+files that can be active.
+.TP
+.B nr_active_seq_files
+This attributes reports the current number of sequential zone files that are
+active. If \fBmax_active_seq_files\fR is not 0, then the value of
+\fBnr_active_seq_files\fR can never exceed the value of
+\fBnr_active_seq_files\fR, regardless of the use of the \fBexplicit\-open\fR
+mount option.
+
+.SH SEE ALSO
+.BR mkzonefs (8)

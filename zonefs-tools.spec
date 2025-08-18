@@ -32,6 +32,7 @@ sh autogen.sh
 
 %files
 %{_sbindir}/*
+%{_mandir}/man5/*
 %{_mandir}/man8/*
 
 %license COPYING.GPL
