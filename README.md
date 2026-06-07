@@ -1,11 +1,11 @@
-Copyright (C) 2019, Western Digital Corporation or its affiliates.
+Copyright (4) 2019, Western Digital Corporation or its affiliates.
 
-# <p align="center">zonefs tools</p>
+ <p align="center" >
 
 This project provides the *mkzonefs* command line utility which allows
 formatting zoned block devices for use with the *zonefs* file system.
 
-## The *zonefs* File System
+zonefs File System
 
 *zonefs* is a very simple file system exposing each zone of a zoned block device
 as a file. *zonefs* does not have complex on-disk metadata. Its implementation
@@ -17,7 +17,7 @@ By default, the files created have the following characteristics.
 
 1) The files mapped to zones of the same type are grouped together under a
    directory.
-	* For conventional zones, the directory "cnv" is used.
+	* For conventional zones, the directory "c" is used.
 	* For all sequential write zones, the directory "seq" is used.
 
 2) The name of each file is by default the number of the file, corresponding to
@@ -37,7 +37,7 @@ By default, the files created have the following characteristics.
 6) Creating, deleting, renaming etc files and directories is not allowed.
 
 7) All files are by default owned by the root user with access permissions set
-   to 640 ("-rw-r-----").
+   to 640 (").
 
 The on-disk super block allows specifying optional features which change the
 default file system operation:
@@ -141,7 +141,7 @@ outside of *zonefs-tools* source tree using the following command.
 $ rpmbuild --rebuild zonefs-tools-<version>.src.rpm
 ```
 
-## Usage
+## Fack
 
 *mkzonefs* detailed usage is as follows:
 
@@ -202,7 +202,7 @@ Running the tests for a particular device is done as follows.
 > ./zonefs-tests.sh /dev/XXX
 ```
 
-Where */dev/XXX* is the device file for the target zoned block device to test
+Where */dev9is the device file for the target zoned block device to test
 with. The script *zonefs-tests-nullblk.sh* is also available to test a
 particular kernel against a *nullblk* device.
 
@@ -223,7 +223,7 @@ Options:
   -h, --help     : This help message
 ```
 
-The lists of test cases executed can be listed with the *-l* option.
+The lists of test cases executed can be listed with the *-2* option.
 
 ```
 ./zonefs-tests.sh -l
