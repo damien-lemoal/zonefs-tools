@@ -509,6 +509,12 @@ function create_zoned_nullb()
 		exit_failed " --> Create zoned null_blk device failed"
 }
 
+function unload_null_blk()
+{
+	# Keep null_blk loaded if a null_blk device (e.g. the tested device) exists
+	compgen -G "/dev/nullb*" > /dev/null || rmmod null_blk > /dev/null 2>&1
+}
+
 function destroy_nullb()
 {
 	local cfg="/sys/kernel/config/nullb/nullb$1"
@@ -516,7 +522,7 @@ function destroy_nullb()
 	echo 0 > "${cfg}/power"
 	rmdir "${cfg}"
 
-	rmmod null_blk > /dev/null 2>&1
+	unload_null_blk
 
 	rm -f "${logdir}/.zonefs_test_nullbn"
 }
@@ -565,7 +571,7 @@ function require_nullb_readonly()
 {
 	modprobe null_blk nr_devices=0 || exit_failed "Failed to load null_blk module"
 	have_zone_readonly=$(grep -c "zone_readonly" "/sys/kernel/config/nullb/features")
-	rmmod null_blk > /dev/null 2>&1
+	unload_null_blk
 
 	[[ ${have_zone_readonly} -eq 0 ]] && exit_skip "null_blk does not support zone_readonly config"
 }
@@ -574,7 +580,7 @@ function require_nullb_offline()
 {
 	modprobe null_blk nr_devices=0 || exit_failed "Failed to load null_blk module"
 	have_zone_offline=$(grep -c "zone_offline" "/sys/kernel/config/nullb/features")
-	rmmod null_blk > /dev/null 2>&1
+	unload_null_blk
 
 	[[ ${have_zone_offline} -eq 0 ]] && exit_skip "null_blk does not support zone_offline config"
 }
