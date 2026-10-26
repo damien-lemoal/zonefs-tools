@@ -485,6 +485,8 @@ function create_nullb()
 	echo ${zoned} > "${cfg}/zoned"
 	if [ "${zoned}" == "1" ]; then
 		echo 32 > "${cfg}/zone_size"
+		# Do not inherit the zone_capacity module parameter
+		[ -w "${cfg}/zone_capacity" ] && echo 0 > "${cfg}/zone_capacity"
 		echo 10 > "${cfg}/zone_nr_conv"
 		echo 8 > "${cfg}/zone_max_open"
 		echo 8 > "${cfg}/zone_max_active"
